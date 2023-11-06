@@ -1,0 +1,3571 @@
+
+> @webglify/glslify2@0.0.1 test
+> jest
+
+  console.log
+    idx 7 7
+
+      at Object.<anonymous>.module.exports (../../node_modules/glsl-parser/lib/expr.js:120:11)
+
+  console.log
+    idx 4 4
+
+      at Object.<anonymous>.module.exports (../../node_modules/glsl-parser/lib/expr.js:120:11)
+          at Array.forEach (<anonymous>)
+
+  console.log
+    idx 1 1
+
+      at Object.<anonymous>.module.exports (../../node_modules/glsl-parser/lib/expr.js:120:11)
+          at Array.forEach (<anonymous>)
+
+  console.log
+    <ref *18> {
+      mode: 2,
+      token: { type: '(program)', data: '(program)' },
+      children: [
+        <ref *17> {
+          mode: 1,
+          token: {
+            type: 'keyword',
+            data: 'float',
+            position: 1,
+            line: 2,
+            column: 5,
+            preceding: [
+              {
+                type: 'whitespace',
+                data: '\n',
+                position: 0,
+                line: 2,
+                column: 0
+              }
+            ]
+          },
+          children: [
+            <ref *1> {
+              mode: 6,
+              token: {
+                type: 'keyword',
+                data: 'float',
+                position: 1,
+                line: 2,
+                column: 5,
+                preceding: [
+                  {
+                    type: 'whitespace',
+                    data: '\n',
+                    position: 0,
+                    line: 2,
+                    column: 0
+                  }
+                ]
+              },
+              children: [
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: 'c61fbbf0.64bbf8',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '52dbd533.bfde3c',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '8452c220.a97a6',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '106f838d.bd906c',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 15,
+                  token: {
+                    type: 'keyword',
+                    data: 'float',
+                    position: 1,
+                    line: 2,
+                    column: 5,
+                    preceding: [
+                      {
+                        type: 'whitespace',
+                        data: '\n',
+                        position: 0,
+                        line: 2,
+                        column: 0
+                      }
+                    ]
+                  },
+                  children: [],
+                  type: 'keyword',
+                  id: 'feb4f37.9c9db1',
+                  parent: [Circular *1]
+                },
+                <ref *2> {
+                  mode: 4,
+                  token: {
+                    type: 'operator',
+                    data: '(',
+                    position: 15,
+                    line: 2,
+                    column: 14,
+                    preceding: [
+                      {
+                        type: 'whitespace',
+                        data: ' ',
+                        position: 14,
+                        line: 2,
+                        column: 14
+                      }
+                    ]
+                  },
+                  children: [
+                    {
+                      mode: 0,
+                      token: {
+                        type: 'ident',
+                        data: 'maskSDF',
+                        position: 7,
+                        line: 2,
+                        column: 13,
+                        preceding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 6,
+                            line: 2,
+                            column: 6
+                          }
+                        ],
+                        succeeding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 14,
+                            line: 2,
+                            column: 14
+                          }
+                        ]
+                      },
+                      children: [],
+                      type: 'ident',
+                      id: '9068d01e.7cd6f',
+                      parent: [Circular *2],
+                      scope: {
+                        uv: <ref *3> {
+                          mode: 0,
+                          token: {
+                            type: 'ident',
+                            data: 'uv',
+                            position: 21,
+                            line: 2,
+                            column: 22,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: ' ',
+                                position: 20,
+                                line: 2,
+                                column: 20
+                              }
+                            ]
+                          },
+                          children: [],
+                          type: 'ident',
+                          id: '306e7cff.c02ed4',
+                          parent: <ref *5> {
+                            mode: 7,
+                            token: {
+                              type: 'operator',
+                              data: ')',
+                              position: 23,
+                              line: 2,
+                              column: 22
+                            },
+                            children: [ [Circular *3] ],
+                            type: 'decllist',
+                            id: '17629061.8c50e',
+                            parent: <ref *4> {
+                              mode: 6,
+                              token: {
+                                type: 'keyword',
+                                data: 'vec2',
+                                position: 16,
+                                line: 2,
+                                column: 19,
+                                succeeding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: ' ',
+                                    position: 24,
+                                    line: 2,
+                                    column: 24
+                                  }
+                                ]
+                              },
+                              children: [
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 16 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: 'd146fc68.a15dc',
+                                  parent: [Circular *4]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 16 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '5135ecec.11e5c4',
+                                  parent: [Circular *4]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 16 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: 'dbaf18b6.dce118',
+                                  parent: [Circular *4]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 16 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '7f47dfeb.3b95b',
+                                  parent: [Circular *4]
+                                },
+                                {
+                                  mode: 15,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'vec2',
+                                    position: 16,
+                                    line: 2,
+                                    column: 19,
+                                    succeeding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 24,
+                                        line: 2,
+                                        column: 24
+                                      }
+                                    ]
+                                  },
+                                  children: [],
+                                  type: 'keyword',
+                                  id: '58f485f7.df2d0c',
+                                  parent: [Circular *4]
+                                },
+                                [Circular *5]
+                              ],
+                              type: 'decl',
+                              id: 'f6428eea.3857e',
+                              flags: 208,
+                              parent: {
+                                mode: 5,
+                                token: {
+                                  type: 'keyword',
+                                  data: 'vec2',
+                                  position: 16,
+                                  line: 2,
+                                  column: 19,
+                                  succeeding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 24,
+                                      line: 2,
+                                      column: 24
+                                    }
+                                  ]
+                                },
+                                children: [ [Circular *4] ],
+                                type: 'functionargs',
+                                id: '13bd5227.8ddd0e',
+                                parent: [Circular *2],
+                                stage: 1
+                              },
+                              stage: [Circular *4]
+                            }
+                          },
+                          data: 'uv',
+                          nud: [Function: itself]
+                        }
+                      },
+                      data: 'maskSDF'
+                    },
+                    <ref *6> {
+                      mode: 5,
+                      token: {
+                        type: 'keyword',
+                        data: 'vec2',
+                        position: 16,
+                        line: 2,
+                        column: 19,
+                        succeeding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 24,
+                            line: 2,
+                            column: 24
+                          }
+                        ]
+                      },
+                      children: [
+                        <ref *4> {
+                          mode: 6,
+                          token: {
+                            type: 'keyword',
+                            data: 'vec2',
+                            position: 16,
+                            line: 2,
+                            column: 19,
+                            succeeding: [
+                              {
+                                type: 'whitespace',
+                                data: ' ',
+                                position: 24,
+                                line: 2,
+                                column: 24
+                              }
+                            ]
+                          },
+                          children: [
+                            {
+                              mode: 22,
+                              token: { data: '', position: 16 },
+                              children: [],
+                              type: 'placeholder',
+                              id: 'd146fc68.a15dc',
+                              parent: [Circular *4]
+                            },
+                            {
+                              mode: 22,
+                              token: { data: '', position: 16 },
+                              children: [],
+                              type: 'placeholder',
+                              id: '5135ecec.11e5c4',
+                              parent: [Circular *4]
+                            },
+                            {
+                              mode: 22,
+                              token: { data: '', position: 16 },
+                              children: [],
+                              type: 'placeholder',
+                              id: 'dbaf18b6.dce118',
+                              parent: [Circular *4]
+                            },
+                            {
+                              mode: 22,
+                              token: { data: '', position: 16 },
+                              children: [],
+                              type: 'placeholder',
+                              id: '7f47dfeb.3b95b',
+                              parent: [Circular *4]
+                            },
+                            {
+                              mode: 15,
+                              token: {
+                                type: 'keyword',
+                                data: 'vec2',
+                                position: 16,
+                                line: 2,
+                                column: 19,
+                                succeeding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: ' ',
+                                    position: 24,
+                                    line: 2,
+                                    column: 24
+                                  }
+                                ]
+                              },
+                              children: [],
+                              type: 'keyword',
+                              id: '58f485f7.df2d0c',
+                              parent: [Circular *4]
+                            },
+                            <ref *5> {
+                              mode: 7,
+                              token: {
+                                type: 'operator',
+                                data: ')',
+                                position: 23,
+                                line: 2,
+                                column: 22
+                              },
+                              children: [
+                                <ref *3> {
+                                  mode: 0,
+                                  token: {
+                                    type: 'ident',
+                                    data: 'uv',
+                                    position: 21,
+                                    line: 2,
+                                    column: 22,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 20,
+                                        line: 2,
+                                        column: 20
+                                      }
+                                    ]
+                                  },
+                                  children: [],
+                                  type: 'ident',
+                                  id: '306e7cff.c02ed4',
+                                  parent: [Circular *5],
+                                  data: 'uv',
+                                  nud: [Function: itself]
+                                }
+                              ],
+                              type: 'decllist',
+                              id: '17629061.8c50e',
+                              parent: [Circular *4]
+                            }
+                          ],
+                          type: 'decl',
+                          id: 'f6428eea.3857e',
+                          flags: 208,
+                          parent: [Circular *6],
+                          stage: [Circular *4]
+                        }
+                      ],
+                      type: 'functionargs',
+                      id: '13bd5227.8ddd0e',
+                      parent: [Circular *2],
+                      stage: 1
+                    },
+                    <ref *12> {
+                      mode: 2,
+                      token: {
+                        type: 'keyword',
+                        data: 'float',
+                        position: 29,
+                        line: 3,
+                        column: 7,
+                        preceding: [
+                          {
+                            type: 'whitespace',
+                            data: '\n  ',
+                            position: 26,
+                            line: 3,
+                            column: 2
+                          }
+                        ],
+                        succeeding: [
+                          {
+                            type: 'whitespace',
+                            data: '\n',
+                            position: 64,
+                            line: 5,
+                            column: 0
+                          }
+                        ]
+                      },
+                      children: [
+                        <ref *11> {
+                          mode: 1,
+                          token: {
+                            type: 'keyword',
+                            data: 'float',
+                            position: 29,
+                            line: 3,
+                            column: 7,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n  ',
+                                position: 26,
+                                line: 3,
+                                column: 2
+                              }
+                            ],
+                            succeeding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n',
+                                position: 64,
+                                line: 5,
+                                column: 0
+                              }
+                            ]
+                          },
+                          children: [
+                            <ref *7> {
+                              mode: 6,
+                              token: {
+                                type: 'keyword',
+                                data: 'float',
+                                position: 29,
+                                line: 3,
+                                column: 7,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n  ',
+                                    position: 26,
+                                    line: 3,
+                                    column: 2
+                                  }
+                                ],
+                                succeeding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n',
+                                    position: 64,
+                                    line: 5,
+                                    column: 0
+                                  }
+                                ]
+                              },
+                              children: [
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: 'bb2bf164.5ca7c',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '9e14b844.d5c668',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '4262eece.7907b',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '96f15aa.28eafa8',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 15,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'float',
+                                    position: 29,
+                                    line: 3,
+                                    column: 7,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n  ',
+                                        position: 26,
+                                        line: 3,
+                                        column: 2
+                                      }
+                                    ],
+                                    succeeding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n',
+                                        position: 64,
+                                        line: 5,
+                                        column: 0
+                                      }
+                                    ]
+                                  },
+                                  children: [],
+                                  type: 'keyword',
+                                  id: '48445c06.4ac164',
+                                  parent: [Circular *7]
+                                },
+                                <ref *8> {
+                                  mode: 7,
+                                  token: {
+                                    type: 'operator',
+                                    data: '=',
+                                    position: 37,
+                                    line: 3,
+                                    column: 11,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 36,
+                                        line: 3,
+                                        column: 10
+                                      }
+                                    ]
+                                  },
+                                  children: [
+                                    {
+                                      mode: 0,
+                                      token: {
+                                        type: 'ident',
+                                        data: 'd',
+                                        position: 35,
+                                        line: 3,
+                                        column: 9,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 34,
+                                            line: 3,
+                                            column: 8
+                                          }
+                                        ]
+                                      },
+                                      children: [],
+                                      type: 'ident',
+                                      id: 'a00d0cd4.55d78',
+                                      parent: [Circular *8],
+                                      data: 'd',
+                                      nud: [Function: itself]
+                                    },
+                                    <ref *10> {
+                                      mode: 11,
+                                      token: {
+                                        type: 'operator',
+                                        data: '=',
+                                        position: 37,
+                                        line: 3,
+                                        column: 11,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 36,
+                                            line: 3,
+                                            column: 10
+                                          }
+                                        ]
+                                      },
+                                      children: [
+                                        <ref *9> {
+                                          token: {
+                                            type: 'operator',
+                                            data: '(',
+                                            position: 47,
+                                            line: 3,
+                                            column: 20
+                                          },
+                                          type: 'call',
+                                          data: '(',
+                                          children: [
+                                            {
+                                              token: {
+                                                type: 'builtin',
+                                                data: 'distance',
+                                                position: 39,
+                                                line: 3,
+                                                column: 20,
+                                                preceding: [
+                                                  {
+                                                    type: 'whitespace',
+                                                    data: ' ',
+                                                    position: 38,
+                                                    line: 3,
+                                                    column: 12
+                                                  }
+                                                ]
+                                              },
+                                              type: 'builtin',
+                                              data: 'distance',
+                                              parent: [Circular *9]
+                                            },
+                                            {
+                                              token: {
+                                                type: 'ident',
+                                                data: 'uv',
+                                                position: 48,
+                                                line: 3,
+                                                column: 23
+                                              },
+                                              type: 'ident',
+                                              parent: [Circular *9]
+                                            }
+                                          ],
+                                          parent: [Circular *10]
+                                        }
+                                      ],
+                                      type: 'expr',
+                                      id: '19f53e77.7dd2e2',
+                                      expecting: [ ',', ';' ],
+                                      parent: [Circular *8],
+                                      tokens: [
+                                        {
+                                          type: 'builtin',
+                                          data: 'distance',
+                                          position: 39,
+                                          line: 3,
+                                          column: 20,
+                                          preceding: [
+                                            {
+                                              type: 'whitespace',
+                                              data: ' ',
+                                              position: 38,
+                                              line: 3,
+                                              column: 12
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          type: 'operator',
+                                          data: '(',
+                                          position: 47,
+                                          line: 3,
+                                          column: 20
+                                        },
+                                        {
+                                          type: 'ident',
+                                          data: 'uv',
+                                          position: 48,
+                                          line: 3,
+                                          column: 23
+                                        },
+                                        {
+                                          type: 'operator',
+                                          data: ')',
+                                          position: 50,
+                                          line: 3,
+                                          column: 23
+                                        }
+                                      ],
+                                      parenlevel: 0,
+                                      bracelevel: 0
+                                    }
+                                  ],
+                                  type: 'decllist',
+                                  id: '8233c785.af2988',
+                                  parent: [Circular *7]
+                                }
+                              ],
+                              type: 'decl',
+                              id: '786face.4496554',
+                              flags: 255,
+                              parent: [Circular *11],
+                              stage: [Circular *7]
+                            }
+                          ],
+                          type: 'stmt',
+                          id: 'e26e6a1.8f08598',
+                          parent: [Circular *12]
+                        },
+                        <ref *15> {
+                          mode: 1,
+                          token: {
+                            type: 'keyword',
+                            data: 'return',
+                            position: 55,
+                            line: 4,
+                            column: 8,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n  ',
+                                position: 52,
+                                line: 4,
+                                column: 2
+                              }
+                            ]
+                          },
+                          children: [
+                            <ref *14> {
+                              mode: 17,
+                              token: {
+                                type: 'keyword',
+                                data: 'return',
+                                position: 55,
+                                line: 4,
+                                column: 8,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n  ',
+                                    position: 52,
+                                    line: 4,
+                                    column: 2
+                                  }
+                                ]
+                              },
+                              children: [
+                                <ref *13> {
+                                  mode: 11,
+                                  token: {
+                                    type: 'ident',
+                                    data: 'd',
+                                    position: 62,
+                                    line: 4,
+                                    column: 10,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 61,
+                                        line: 4,
+                                        column: 9
+                                      }
+                                    ]
+                                  },
+                                  children: [
+                                    {
+                                      token: {
+                                        type: 'ident',
+                                        data: 'd',
+                                        position: 62,
+                                        line: 4,
+                                        column: 10,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 61,
+                                            line: 4,
+                                            column: 9
+                                          }
+                                        ]
+                                      },
+                                      type: 'ident',
+                                      parent: [Circular *13]
+                                    }
+                                  ],
+                                  type: 'expr',
+                                  id: 'ad1f48a8.e7ecf8',
+                                  expecting: [ ';' ],
+                                  parent: [Circular *14],
+                                  tokens: [
+                                    {
+                                      type: 'ident',
+                                      data: 'd',
+                                      position: 62,
+                                      line: 4,
+                                      column: 10,
+                                      preceding: [
+                                        {
+                                          type: 'whitespace',
+                                          data: ' ',
+                                          position: 61,
+                                          line: 4,
+                                          column: 9
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  parenlevel: 0,
+                                  bracelevel: 0
+                                }
+                              ],
+                              type: 'return',
+                              id: '8045fbbf.c13238',
+                              parent: [Circular *15],
+                              stage: 2
+                            }
+                          ],
+                          type: 'stmt',
+                          id: '79904980.56bf68',
+                          parent: [Circular *12]
+                        }
+                      ],
+                      type: 'stmtlist',
+                      id: '6e862292.a734dc',
+                      expecting: '}',
+                      parent: [Circular *2],
+                      stage: [Circular *12],
+                      scope: {
+                        d: <ref *16> {
+                          mode: 0,
+                          token: {
+                            type: 'ident',
+                            data: 'd',
+                            position: 35,
+                            line: 3,
+                            column: 9,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: ' ',
+                                position: 34,
+                                line: 3,
+                                column: 8
+                              }
+                            ]
+                          },
+                          children: [],
+                          type: 'ident',
+                          id: 'a00d0cd4.55d78',
+                          parent: <ref *8> {
+                            mode: 7,
+                            token: {
+                              type: 'operator',
+                              data: '=',
+                              position: 37,
+                              line: 3,
+                              column: 11,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: ' ',
+                                  position: 36,
+                                  line: 3,
+                                  column: 10
+                                }
+                              ]
+                            },
+                            children: [
+                              [Circular *16],
+                              <ref *10> {
+                                mode: 11,
+                                token: {
+                                  type: 'operator',
+                                  data: '=',
+                                  position: 37,
+                                  line: 3,
+                                  column: 11,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 36,
+                                      line: 3,
+                                      column: 10
+                                    }
+                                  ]
+                                },
+                                children: [
+                                  <ref *9> {
+                                    token: {
+                                      type: 'operator',
+                                      data: '(',
+                                      position: 47,
+                                      line: 3,
+                                      column: 20
+                                    },
+                                    type: 'call',
+                                    data: '(',
+                                    children: [
+                                      {
+                                        token: {
+                                          type: 'builtin',
+                                          data: 'distance',
+                                          position: 39,
+                                          line: 3,
+                                          column: 20,
+                                          preceding: [
+                                            {
+                                              type: 'whitespace',
+                                              data: ' ',
+                                              position: 38,
+                                              line: 3,
+                                              column: 12
+                                            }
+                                          ]
+                                        },
+                                        type: 'builtin',
+                                        data: 'distance',
+                                        parent: [Circular *9]
+                                      },
+                                      {
+                                        token: {
+                                          type: 'ident',
+                                          data: 'uv',
+                                          position: 48,
+                                          line: 3,
+                                          column: 23
+                                        },
+                                        type: 'ident',
+                                        parent: [Circular *9]
+                                      }
+                                    ],
+                                    parent: [Circular *10]
+                                  }
+                                ],
+                                type: 'expr',
+                                id: '19f53e77.7dd2e2',
+                                expecting: [ ',', ';' ],
+                                parent: [Circular *8],
+                                tokens: [
+                                  {
+                                    type: 'builtin',
+                                    data: 'distance',
+                                    position: 39,
+                                    line: 3,
+                                    column: 20,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 38,
+                                        line: 3,
+                                        column: 12
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    type: 'operator',
+                                    data: '(',
+                                    position: 47,
+                                    line: 3,
+                                    column: 20
+                                  },
+                                  {
+                                    type: 'ident',
+                                    data: 'uv',
+                                    position: 48,
+                                    line: 3,
+                                    column: 23
+                                  },
+                                  {
+                                    type: 'operator',
+                                    data: ')',
+                                    position: 50,
+                                    line: 3,
+                                    column: 23
+                                  }
+                                ],
+                                parenlevel: 0,
+                                bracelevel: 0
+                              }
+                            ],
+                            type: 'decllist',
+                            id: '8233c785.af2988',
+                            parent: <ref *7> {
+                              mode: 6,
+                              token: {
+                                type: 'keyword',
+                                data: 'float',
+                                position: 29,
+                                line: 3,
+                                column: 7,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n  ',
+                                    position: 26,
+                                    line: 3,
+                                    column: 2
+                                  }
+                                ],
+                                succeeding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n',
+                                    position: 64,
+                                    line: 5,
+                                    column: 0
+                                  }
+                                ]
+                              },
+                              children: [
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: 'bb2bf164.5ca7c',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '9e14b844.d5c668',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '4262eece.7907b',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 22,
+                                  token: { data: '', position: 29 },
+                                  children: [],
+                                  type: 'placeholder',
+                                  id: '96f15aa.28eafa8',
+                                  parent: [Circular *7]
+                                },
+                                {
+                                  mode: 15,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'float',
+                                    position: 29,
+                                    line: 3,
+                                    column: 7,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n  ',
+                                        position: 26,
+                                        line: 3,
+                                        column: 2
+                                      }
+                                    ],
+                                    succeeding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n',
+                                        position: 64,
+                                        line: 5,
+                                        column: 0
+                                      }
+                                    ]
+                                  },
+                                  children: [],
+                                  type: 'keyword',
+                                  id: '48445c06.4ac164',
+                                  parent: [Circular *7]
+                                },
+                                [Circular *8]
+                              ],
+                              type: 'decl',
+                              id: '786face.4496554',
+                              flags: 255,
+                              parent: <ref *11> {
+                                mode: 1,
+                                token: {
+                                  type: 'keyword',
+                                  data: 'float',
+                                  position: 29,
+                                  line: 3,
+                                  column: 7,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: '\n  ',
+                                      position: 26,
+                                      line: 3,
+                                      column: 2
+                                    }
+                                  ],
+                                  succeeding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: '\n',
+                                      position: 64,
+                                      line: 5,
+                                      column: 0
+                                    }
+                                  ]
+                                },
+                                children: [ [Circular *7] ],
+                                type: 'stmt',
+                                id: 'e26e6a1.8f08598',
+                                parent: [Circular *12]
+                              },
+                              stage: [Circular *7]
+                            }
+                          },
+                          data: 'd',
+                          nud: [Function: itself]
+                        }
+                      }
+                    }
+                  ],
+                  type: 'function',
+                  id: '90054f1e.73137',
+                  parent: [Circular *1],
+                  stage: [Circular *17]
+                }
+              ],
+              type: 'decl',
+              id: 'ecd5793.39c4a88',
+              flags: 255,
+              parent: [Circular *17],
+              stage: 8
+            }
+          ],
+          type: 'stmt',
+          id: '30479ef8.d8c272',
+          parent: [Circular *18]
+        },
+        {
+          mode: 14,
+          token: {
+            type: 'preprocessor',
+            data: '#pragma glslify2: export(maskSDF) ',
+            position: 68,
+            line: 7,
+            column: 34,
+            preceding: [
+              {
+                type: 'whitespace',
+                data: '\n\n',
+                position: 66,
+                line: 7,
+                column: 0
+              }
+            ]
+          },
+          children: [],
+          type: 'preprocessor',
+          id: 'b410cd31.e0c0e',
+          parent: [Circular *18]
+        }
+      ],
+      type: 'stmtlist',
+      id: 'f72ee3d6.9d85c',
+      expecting: '(eof)',
+      parent: undefined,
+      stage: [Circular *18],
+      scope: {
+        maskSDF: <ref *19> {
+          mode: 0,
+          token: {
+            type: 'ident',
+            data: 'maskSDF',
+            position: 7,
+            line: 2,
+            column: 13,
+            preceding: [
+              {
+                type: 'whitespace',
+                data: ' ',
+                position: 6,
+                line: 2,
+                column: 6
+              }
+            ],
+            succeeding: [
+              {
+                type: 'whitespace',
+                data: ' ',
+                position: 14,
+                line: 2,
+                column: 14
+              }
+            ]
+          },
+          children: [],
+          type: 'ident',
+          id: '9068d01e.7cd6f',
+          parent: <ref *2> {
+            mode: 4,
+            token: {
+              type: 'operator',
+              data: '(',
+              position: 15,
+              line: 2,
+              column: 14,
+              preceding: [
+                {
+                  type: 'whitespace',
+                  data: ' ',
+                  position: 14,
+                  line: 2,
+                  column: 14
+                }
+              ]
+            },
+            children: [
+              [Circular *19],
+              <ref *6> {
+                mode: 5,
+                token: {
+                  type: 'keyword',
+                  data: 'vec2',
+                  position: 16,
+                  line: 2,
+                  column: 19,
+                  succeeding: [
+                    {
+                      type: 'whitespace',
+                      data: ' ',
+                      position: 24,
+                      line: 2,
+                      column: 24
+                    }
+                  ]
+                },
+                children: [
+                  <ref *4> {
+                    mode: 6,
+                    token: {
+                      type: 'keyword',
+                      data: 'vec2',
+                      position: 16,
+                      line: 2,
+                      column: 19,
+                      succeeding: [
+                        {
+                          type: 'whitespace',
+                          data: ' ',
+                          position: 24,
+                          line: 2,
+                          column: 24
+                        }
+                      ]
+                    },
+                    children: [
+                      {
+                        mode: 22,
+                        token: { data: '', position: 16 },
+                        children: [],
+                        type: 'placeholder',
+                        id: 'd146fc68.a15dc',
+                        parent: [Circular *4]
+                      },
+                      {
+                        mode: 22,
+                        token: { data: '', position: 16 },
+                        children: [],
+                        type: 'placeholder',
+                        id: '5135ecec.11e5c4',
+                        parent: [Circular *4]
+                      },
+                      {
+                        mode: 22,
+                        token: { data: '', position: 16 },
+                        children: [],
+                        type: 'placeholder',
+                        id: 'dbaf18b6.dce118',
+                        parent: [Circular *4]
+                      },
+                      {
+                        mode: 22,
+                        token: { data: '', position: 16 },
+                        children: [],
+                        type: 'placeholder',
+                        id: '7f47dfeb.3b95b',
+                        parent: [Circular *4]
+                      },
+                      {
+                        mode: 15,
+                        token: {
+                          type: 'keyword',
+                          data: 'vec2',
+                          position: 16,
+                          line: 2,
+                          column: 19,
+                          succeeding: [
+                            {
+                              type: 'whitespace',
+                              data: ' ',
+                              position: 24,
+                              line: 2,
+                              column: 24
+                            }
+                          ]
+                        },
+                        children: [],
+                        type: 'keyword',
+                        id: '58f485f7.df2d0c',
+                        parent: [Circular *4]
+                      },
+                      <ref *5> {
+                        mode: 7,
+                        token: {
+                          type: 'operator',
+                          data: ')',
+                          position: 23,
+                          line: 2,
+                          column: 22
+                        },
+                        children: [
+                          <ref *3> {
+                            mode: 0,
+                            token: {
+                              type: 'ident',
+                              data: 'uv',
+                              position: 21,
+                              line: 2,
+                              column: 22,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: ' ',
+                                  position: 20,
+                                  line: 2,
+                                  column: 20
+                                }
+                              ]
+                            },
+                            children: [],
+                            type: 'ident',
+                            id: '306e7cff.c02ed4',
+                            parent: [Circular *5],
+                            data: 'uv',
+                            nud: [Function: itself]
+                          }
+                        ],
+                        type: 'decllist',
+                        id: '17629061.8c50e',
+                        parent: [Circular *4]
+                      }
+                    ],
+                    type: 'decl',
+                    id: 'f6428eea.3857e',
+                    flags: 208,
+                    parent: [Circular *6],
+                    stage: [Circular *4]
+                  }
+                ],
+                type: 'functionargs',
+                id: '13bd5227.8ddd0e',
+                parent: [Circular *2],
+                stage: 1
+              },
+              <ref *12> {
+                mode: 2,
+                token: {
+                  type: 'keyword',
+                  data: 'float',
+                  position: 29,
+                  line: 3,
+                  column: 7,
+                  preceding: [
+                    {
+                      type: 'whitespace',
+                      data: '\n  ',
+                      position: 26,
+                      line: 3,
+                      column: 2
+                    }
+                  ],
+                  succeeding: [
+                    {
+                      type: 'whitespace',
+                      data: '\n',
+                      position: 64,
+                      line: 5,
+                      column: 0
+                    }
+                  ]
+                },
+                children: [
+                  <ref *11> {
+                    mode: 1,
+                    token: {
+                      type: 'keyword',
+                      data: 'float',
+                      position: 29,
+                      line: 3,
+                      column: 7,
+                      preceding: [
+                        {
+                          type: 'whitespace',
+                          data: '\n  ',
+                          position: 26,
+                          line: 3,
+                          column: 2
+                        }
+                      ],
+                      succeeding: [
+                        {
+                          type: 'whitespace',
+                          data: '\n',
+                          position: 64,
+                          line: 5,
+                          column: 0
+                        }
+                      ]
+                    },
+                    children: [
+                      <ref *7> {
+                        mode: 6,
+                        token: {
+                          type: 'keyword',
+                          data: 'float',
+                          position: 29,
+                          line: 3,
+                          column: 7,
+                          preceding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n  ',
+                              position: 26,
+                              line: 3,
+                              column: 2
+                            }
+                          ],
+                          succeeding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n',
+                              position: 64,
+                              line: 5,
+                              column: 0
+                            }
+                          ]
+                        },
+                        children: [
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: 'bb2bf164.5ca7c',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '9e14b844.d5c668',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '4262eece.7907b',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '96f15aa.28eafa8',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 15,
+                            token: {
+                              type: 'keyword',
+                              data: 'float',
+                              position: 29,
+                              line: 3,
+                              column: 7,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n  ',
+                                  position: 26,
+                                  line: 3,
+                                  column: 2
+                                }
+                              ],
+                              succeeding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n',
+                                  position: 64,
+                                  line: 5,
+                                  column: 0
+                                }
+                              ]
+                            },
+                            children: [],
+                            type: 'keyword',
+                            id: '48445c06.4ac164',
+                            parent: [Circular *7]
+                          },
+                          <ref *8> {
+                            mode: 7,
+                            token: {
+                              type: 'operator',
+                              data: '=',
+                              position: 37,
+                              line: 3,
+                              column: 11,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: ' ',
+                                  position: 36,
+                                  line: 3,
+                                  column: 10
+                                }
+                              ]
+                            },
+                            children: [
+                              <ref *16> {
+                                mode: 0,
+                                token: {
+                                  type: 'ident',
+                                  data: 'd',
+                                  position: 35,
+                                  line: 3,
+                                  column: 9,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 34,
+                                      line: 3,
+                                      column: 8
+                                    }
+                                  ]
+                                },
+                                children: [],
+                                type: 'ident',
+                                id: 'a00d0cd4.55d78',
+                                parent: [Circular *8],
+                                data: 'd',
+                                nud: [Function: itself]
+                              },
+                              <ref *10> {
+                                mode: 11,
+                                token: {
+                                  type: 'operator',
+                                  data: '=',
+                                  position: 37,
+                                  line: 3,
+                                  column: 11,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 36,
+                                      line: 3,
+                                      column: 10
+                                    }
+                                  ]
+                                },
+                                children: [
+                                  <ref *9> {
+                                    token: {
+                                      type: 'operator',
+                                      data: '(',
+                                      position: 47,
+                                      line: 3,
+                                      column: 20
+                                    },
+                                    type: 'call',
+                                    data: '(',
+                                    children: [
+                                      {
+                                        token: {
+                                          type: 'builtin',
+                                          data: 'distance',
+                                          position: 39,
+                                          line: 3,
+                                          column: 20,
+                                          preceding: [
+                                            {
+                                              type: 'whitespace',
+                                              data: ' ',
+                                              position: 38,
+                                              line: 3,
+                                              column: 12
+                                            }
+                                          ]
+                                        },
+                                        type: 'builtin',
+                                        data: 'distance',
+                                        parent: [Circular *9]
+                                      },
+                                      {
+                                        token: {
+                                          type: 'ident',
+                                          data: 'uv',
+                                          position: 48,
+                                          line: 3,
+                                          column: 23
+                                        },
+                                        type: 'ident',
+                                        parent: [Circular *9]
+                                      }
+                                    ],
+                                    parent: [Circular *10]
+                                  }
+                                ],
+                                type: 'expr',
+                                id: '19f53e77.7dd2e2',
+                                expecting: [ ',', ';' ],
+                                parent: [Circular *8],
+                                tokens: [
+                                  {
+                                    type: 'builtin',
+                                    data: 'distance',
+                                    position: 39,
+                                    line: 3,
+                                    column: 20,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 38,
+                                        line: 3,
+                                        column: 12
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    type: 'operator',
+                                    data: '(',
+                                    position: 47,
+                                    line: 3,
+                                    column: 20
+                                  },
+                                  {
+                                    type: 'ident',
+                                    data: 'uv',
+                                    position: 48,
+                                    line: 3,
+                                    column: 23
+                                  },
+                                  {
+                                    type: 'operator',
+                                    data: ')',
+                                    position: 50,
+                                    line: 3,
+                                    column: 23
+                                  }
+                                ],
+                                parenlevel: 0,
+                                bracelevel: 0
+                              }
+                            ],
+                            type: 'decllist',
+                            id: '8233c785.af2988',
+                            parent: [Circular *7]
+                          }
+                        ],
+                        type: 'decl',
+                        id: '786face.4496554',
+                        flags: 255,
+                        parent: [Circular *11],
+                        stage: [Circular *7]
+                      }
+                    ],
+                    type: 'stmt',
+                    id: 'e26e6a1.8f08598',
+                    parent: [Circular *12]
+                  },
+                  <ref *15> {
+                    mode: 1,
+                    token: {
+                      type: 'keyword',
+                      data: 'return',
+                      position: 55,
+                      line: 4,
+                      column: 8,
+                      preceding: [
+                        {
+                          type: 'whitespace',
+                          data: '\n  ',
+                          position: 52,
+                          line: 4,
+                          column: 2
+                        }
+                      ]
+                    },
+                    children: [
+                      <ref *14> {
+                        mode: 17,
+                        token: {
+                          type: 'keyword',
+                          data: 'return',
+                          position: 55,
+                          line: 4,
+                          column: 8,
+                          preceding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n  ',
+                              position: 52,
+                              line: 4,
+                              column: 2
+                            }
+                          ]
+                        },
+                        children: [
+                          <ref *13> {
+                            mode: 11,
+                            token: {
+                              type: 'ident',
+                              data: 'd',
+                              position: 62,
+                              line: 4,
+                              column: 10,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: ' ',
+                                  position: 61,
+                                  line: 4,
+                                  column: 9
+                                }
+                              ]
+                            },
+                            children: [
+                              {
+                                token: {
+                                  type: 'ident',
+                                  data: 'd',
+                                  position: 62,
+                                  line: 4,
+                                  column: 10,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 61,
+                                      line: 4,
+                                      column: 9
+                                    }
+                                  ]
+                                },
+                                type: 'ident',
+                                parent: [Circular *13]
+                              }
+                            ],
+                            type: 'expr',
+                            id: 'ad1f48a8.e7ecf8',
+                            expecting: [ ';' ],
+                            parent: [Circular *14],
+                            tokens: [
+                              {
+                                type: 'ident',
+                                data: 'd',
+                                position: 62,
+                                line: 4,
+                                column: 10,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: ' ',
+                                    position: 61,
+                                    line: 4,
+                                    column: 9
+                                  }
+                                ]
+                              }
+                            ],
+                            parenlevel: 0,
+                            bracelevel: 0
+                          }
+                        ],
+                        type: 'return',
+                        id: '8045fbbf.c13238',
+                        parent: [Circular *15],
+                        stage: 2
+                      }
+                    ],
+                    type: 'stmt',
+                    id: '79904980.56bf68',
+                    parent: [Circular *12]
+                  }
+                ],
+                type: 'stmtlist',
+                id: '6e862292.a734dc',
+                expecting: '}',
+                parent: [Circular *2],
+                stage: [Circular *12],
+                scope: {
+                  d: <ref *16> {
+                    mode: 0,
+                    token: {
+                      type: 'ident',
+                      data: 'd',
+                      position: 35,
+                      line: 3,
+                      column: 9,
+                      preceding: [
+                        {
+                          type: 'whitespace',
+                          data: ' ',
+                          position: 34,
+                          line: 3,
+                          column: 8
+                        }
+                      ]
+                    },
+                    children: [],
+                    type: 'ident',
+                    id: 'a00d0cd4.55d78',
+                    parent: <ref *8> {
+                      mode: 7,
+                      token: {
+                        type: 'operator',
+                        data: '=',
+                        position: 37,
+                        line: 3,
+                        column: 11,
+                        preceding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 36,
+                            line: 3,
+                            column: 10
+                          }
+                        ]
+                      },
+                      children: [
+                        [Circular *16],
+                        <ref *10> {
+                          mode: 11,
+                          token: {
+                            type: 'operator',
+                            data: '=',
+                            position: 37,
+                            line: 3,
+                            column: 11,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: ' ',
+                                position: 36,
+                                line: 3,
+                                column: 10
+                              }
+                            ]
+                          },
+                          children: [
+                            <ref *9> {
+                              token: {
+                                type: 'operator',
+                                data: '(',
+                                position: 47,
+                                line: 3,
+                                column: 20
+                              },
+                              type: 'call',
+                              data: '(',
+                              children: [
+                                {
+                                  token: {
+                                    type: 'builtin',
+                                    data: 'distance',
+                                    position: 39,
+                                    line: 3,
+                                    column: 20,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: ' ',
+                                        position: 38,
+                                        line: 3,
+                                        column: 12
+                                      }
+                                    ]
+                                  },
+                                  type: 'builtin',
+                                  data: 'distance',
+                                  parent: [Circular *9]
+                                },
+                                {
+                                  token: {
+                                    type: 'ident',
+                                    data: 'uv',
+                                    position: 48,
+                                    line: 3,
+                                    column: 23
+                                  },
+                                  type: 'ident',
+                                  parent: [Circular *9]
+                                }
+                              ],
+                              parent: [Circular *10]
+                            }
+                          ],
+                          type: 'expr',
+                          id: '19f53e77.7dd2e2',
+                          expecting: [ ',', ';' ],
+                          parent: [Circular *8],
+                          tokens: [
+                            {
+                              type: 'builtin',
+                              data: 'distance',
+                              position: 39,
+                              line: 3,
+                              column: 20,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: ' ',
+                                  position: 38,
+                                  line: 3,
+                                  column: 12
+                                }
+                              ]
+                            },
+                            {
+                              type: 'operator',
+                              data: '(',
+                              position: 47,
+                              line: 3,
+                              column: 20
+                            },
+                            {
+                              type: 'ident',
+                              data: 'uv',
+                              position: 48,
+                              line: 3,
+                              column: 23
+                            },
+                            {
+                              type: 'operator',
+                              data: ')',
+                              position: 50,
+                              line: 3,
+                              column: 23
+                            }
+                          ],
+                          parenlevel: 0,
+                          bracelevel: 0
+                        }
+                      ],
+                      type: 'decllist',
+                      id: '8233c785.af2988',
+                      parent: <ref *7> {
+                        mode: 6,
+                        token: {
+                          type: 'keyword',
+                          data: 'float',
+                          position: 29,
+                          line: 3,
+                          column: 7,
+                          preceding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n  ',
+                              position: 26,
+                              line: 3,
+                              column: 2
+                            }
+                          ],
+                          succeeding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n',
+                              position: 64,
+                              line: 5,
+                              column: 0
+                            }
+                          ]
+                        },
+                        children: [
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: 'bb2bf164.5ca7c',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '9e14b844.d5c668',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '4262eece.7907b',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 29 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '96f15aa.28eafa8',
+                            parent: [Circular *7]
+                          },
+                          {
+                            mode: 15,
+                            token: {
+                              type: 'keyword',
+                              data: 'float',
+                              position: 29,
+                              line: 3,
+                              column: 7,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n  ',
+                                  position: 26,
+                                  line: 3,
+                                  column: 2
+                                }
+                              ],
+                              succeeding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n',
+                                  position: 64,
+                                  line: 5,
+                                  column: 0
+                                }
+                              ]
+                            },
+                            children: [],
+                            type: 'keyword',
+                            id: '48445c06.4ac164',
+                            parent: [Circular *7]
+                          },
+                          [Circular *8]
+                        ],
+                        type: 'decl',
+                        id: '786face.4496554',
+                        flags: 255,
+                        parent: <ref *11> {
+                          mode: 1,
+                          token: {
+                            type: 'keyword',
+                            data: 'float',
+                            position: 29,
+                            line: 3,
+                            column: 7,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n  ',
+                                position: 26,
+                                line: 3,
+                                column: 2
+                              }
+                            ],
+                            succeeding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n',
+                                position: 64,
+                                line: 5,
+                                column: 0
+                              }
+                            ]
+                          },
+                          children: [ [Circular *7] ],
+                          type: 'stmt',
+                          id: 'e26e6a1.8f08598',
+                          parent: [Circular *12]
+                        },
+                        stage: [Circular *7]
+                      }
+                    },
+                    data: 'd',
+                    nud: [Function: itself]
+                  }
+                }
+              }
+            ],
+            type: 'function',
+            id: '90054f1e.73137',
+            parent: <ref *1> {
+              mode: 6,
+              token: {
+                type: 'keyword',
+                data: 'float',
+                position: 1,
+                line: 2,
+                column: 5,
+                preceding: [
+                  {
+                    type: 'whitespace',
+                    data: '\n',
+                    position: 0,
+                    line: 2,
+                    column: 0
+                  }
+                ]
+              },
+              children: [
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: 'c61fbbf0.64bbf8',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '52dbd533.bfde3c',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '8452c220.a97a6',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 22,
+                  token: { data: '', position: 1 },
+                  children: [],
+                  type: 'placeholder',
+                  id: '106f838d.bd906c',
+                  parent: [Circular *1]
+                },
+                {
+                  mode: 15,
+                  token: {
+                    type: 'keyword',
+                    data: 'float',
+                    position: 1,
+                    line: 2,
+                    column: 5,
+                    preceding: [
+                      {
+                        type: 'whitespace',
+                        data: '\n',
+                        position: 0,
+                        line: 2,
+                        column: 0
+                      }
+                    ]
+                  },
+                  children: [],
+                  type: 'keyword',
+                  id: 'feb4f37.9c9db1',
+                  parent: [Circular *1]
+                },
+                [Circular *2]
+              ],
+              type: 'decl',
+              id: 'ecd5793.39c4a88',
+              flags: 255,
+              parent: <ref *17> {
+                mode: 1,
+                token: {
+                  type: 'keyword',
+                  data: 'float',
+                  position: 1,
+                  line: 2,
+                  column: 5,
+                  preceding: [
+                    {
+                      type: 'whitespace',
+                      data: '\n',
+                      position: 0,
+                      line: 2,
+                      column: 0
+                    }
+                  ]
+                },
+                children: [ [Circular *1] ],
+                type: 'stmt',
+                id: '30479ef8.d8c272',
+                parent: [Circular *18]
+              },
+              stage: 8
+            },
+            stage: <ref *17> {
+              mode: 1,
+              token: {
+                type: 'keyword',
+                data: 'float',
+                position: 1,
+                line: 2,
+                column: 5,
+                preceding: [
+                  {
+                    type: 'whitespace',
+                    data: '\n',
+                    position: 0,
+                    line: 2,
+                    column: 0
+                  }
+                ]
+              },
+              children: [
+                <ref *1> {
+                  mode: 6,
+                  token: {
+                    type: 'keyword',
+                    data: 'float',
+                    position: 1,
+                    line: 2,
+                    column: 5,
+                    preceding: [
+                      {
+                        type: 'whitespace',
+                        data: '\n',
+                        position: 0,
+                        line: 2,
+                        column: 0
+                      }
+                    ]
+                  },
+                  children: [
+                    {
+                      mode: 22,
+                      token: { data: '', position: 1 },
+                      children: [],
+                      type: 'placeholder',
+                      id: 'c61fbbf0.64bbf8',
+                      parent: [Circular *1]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 1 },
+                      children: [],
+                      type: 'placeholder',
+                      id: '52dbd533.bfde3c',
+                      parent: [Circular *1]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 1 },
+                      children: [],
+                      type: 'placeholder',
+                      id: '8452c220.a97a6',
+                      parent: [Circular *1]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 1 },
+                      children: [],
+                      type: 'placeholder',
+                      id: '106f838d.bd906c',
+                      parent: [Circular *1]
+                    },
+                    {
+                      mode: 15,
+                      token: {
+                        type: 'keyword',
+                        data: 'float',
+                        position: 1,
+                        line: 2,
+                        column: 5,
+                        preceding: [
+                          {
+                            type: 'whitespace',
+                            data: '\n',
+                            position: 0,
+                            line: 2,
+                            column: 0
+                          }
+                        ]
+                      },
+                      children: [],
+                      type: 'keyword',
+                      id: 'feb4f37.9c9db1',
+                      parent: [Circular *1]
+                    },
+                    [Circular *2]
+                  ],
+                  type: 'decl',
+                  id: 'ecd5793.39c4a88',
+                  flags: 255,
+                  parent: [Circular *17],
+                  stage: 8
+                }
+              ],
+              type: 'stmt',
+              id: '30479ef8.d8c272',
+              parent: [Circular *18]
+            }
+          },
+          scope: {
+            uv: <ref *3> {
+              mode: 0,
+              token: {
+                type: 'ident',
+                data: 'uv',
+                position: 21,
+                line: 2,
+                column: 22,
+                preceding: [
+                  {
+                    type: 'whitespace',
+                    data: ' ',
+                    position: 20,
+                    line: 2,
+                    column: 20
+                  }
+                ]
+              },
+              children: [],
+              type: 'ident',
+              id: '306e7cff.c02ed4',
+              parent: <ref *5> {
+                mode: 7,
+                token: {
+                  type: 'operator',
+                  data: ')',
+                  position: 23,
+                  line: 2,
+                  column: 22
+                },
+                children: [ [Circular *3] ],
+                type: 'decllist',
+                id: '17629061.8c50e',
+                parent: <ref *4> {
+                  mode: 6,
+                  token: {
+                    type: 'keyword',
+                    data: 'vec2',
+                    position: 16,
+                    line: 2,
+                    column: 19,
+                    succeeding: [
+                      {
+                        type: 'whitespace',
+                        data: ' ',
+                        position: 24,
+                        line: 2,
+                        column: 24
+                      }
+                    ]
+                  },
+                  children: [
+                    {
+                      mode: 22,
+                      token: { data: '', position: 16 },
+                      children: [],
+                      type: 'placeholder',
+                      id: 'd146fc68.a15dc',
+                      parent: [Circular *4]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 16 },
+                      children: [],
+                      type: 'placeholder',
+                      id: '5135ecec.11e5c4',
+                      parent: [Circular *4]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 16 },
+                      children: [],
+                      type: 'placeholder',
+                      id: 'dbaf18b6.dce118',
+                      parent: [Circular *4]
+                    },
+                    {
+                      mode: 22,
+                      token: { data: '', position: 16 },
+                      children: [],
+                      type: 'placeholder',
+                      id: '7f47dfeb.3b95b',
+                      parent: [Circular *4]
+                    },
+                    {
+                      mode: 15,
+                      token: {
+                        type: 'keyword',
+                        data: 'vec2',
+                        position: 16,
+                        line: 2,
+                        column: 19,
+                        succeeding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 24,
+                            line: 2,
+                            column: 24
+                          }
+                        ]
+                      },
+                      children: [],
+                      type: 'keyword',
+                      id: '58f485f7.df2d0c',
+                      parent: [Circular *4]
+                    },
+                    [Circular *5]
+                  ],
+                  type: 'decl',
+                  id: 'f6428eea.3857e',
+                  flags: 208,
+                  parent: <ref *6> {
+                    mode: 5,
+                    token: {
+                      type: 'keyword',
+                      data: 'vec2',
+                      position: 16,
+                      line: 2,
+                      column: 19,
+                      succeeding: [
+                        {
+                          type: 'whitespace',
+                          data: ' ',
+                          position: 24,
+                          line: 2,
+                          column: 24
+                        }
+                      ]
+                    },
+                    children: [ [Circular *4] ],
+                    type: 'functionargs',
+                    id: '13bd5227.8ddd0e',
+                    parent: <ref *2> {
+                      mode: 4,
+                      token: {
+                        type: 'operator',
+                        data: '(',
+                        position: 15,
+                        line: 2,
+                        column: 14,
+                        preceding: [
+                          {
+                            type: 'whitespace',
+                            data: ' ',
+                            position: 14,
+                            line: 2,
+                            column: 14
+                          }
+                        ]
+                      },
+                      children: [
+                        [Circular *19],
+                        [Circular *6],
+                        <ref *12> {
+                          mode: 2,
+                          token: {
+                            type: 'keyword',
+                            data: 'float',
+                            position: 29,
+                            line: 3,
+                            column: 7,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n  ',
+                                position: 26,
+                                line: 3,
+                                column: 2
+                              }
+                            ],
+                            succeeding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n',
+                                position: 64,
+                                line: 5,
+                                column: 0
+                              }
+                            ]
+                          },
+                          children: [
+                            <ref *11> {
+                              mode: 1,
+                              token: {
+                                type: 'keyword',
+                                data: 'float',
+                                position: 29,
+                                line: 3,
+                                column: 7,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n  ',
+                                    position: 26,
+                                    line: 3,
+                                    column: 2
+                                  }
+                                ],
+                                succeeding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n',
+                                    position: 64,
+                                    line: 5,
+                                    column: 0
+                                  }
+                                ]
+                              },
+                              children: [
+                                <ref *7> {
+                                  mode: 6,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'float',
+                                    position: 29,
+                                    line: 3,
+                                    column: 7,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n  ',
+                                        position: 26,
+                                        line: 3,
+                                        column: 2
+                                      }
+                                    ],
+                                    succeeding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n',
+                                        position: 64,
+                                        line: 5,
+                                        column: 0
+                                      }
+                                    ]
+                                  },
+                                  children: [
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: 'bb2bf164.5ca7c',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '9e14b844.d5c668',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '4262eece.7907b',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '96f15aa.28eafa8',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 15,
+                                      token: {
+                                        type: 'keyword',
+                                        data: 'float',
+                                        position: 29,
+                                        line: 3,
+                                        column: 7,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: '\n  ',
+                                            position: 26,
+                                            line: 3,
+                                            column: 2
+                                          }
+                                        ],
+                                        succeeding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: '\n',
+                                            position: 64,
+                                            line: 5,
+                                            column: 0
+                                          }
+                                        ]
+                                      },
+                                      children: [],
+                                      type: 'keyword',
+                                      id: '48445c06.4ac164',
+                                      parent: [Circular *7]
+                                    },
+                                    <ref *8> {
+                                      mode: 7,
+                                      token: {
+                                        type: 'operator',
+                                        data: '=',
+                                        position: 37,
+                                        line: 3,
+                                        column: 11,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 36,
+                                            line: 3,
+                                            column: 10
+                                          }
+                                        ]
+                                      },
+                                      children: [
+                                        <ref *16> {
+                                          mode: 0,
+                                          token: {
+                                            type: 'ident',
+                                            data: 'd',
+                                            position: 35,
+                                            line: 3,
+                                            column: 9,
+                                            preceding: [
+                                              {
+                                                type: 'whitespace',
+                                                data: ' ',
+                                                position: 34,
+                                                line: 3,
+                                                column: 8
+                                              }
+                                            ]
+                                          },
+                                          children: [],
+                                          type: 'ident',
+                                          id: 'a00d0cd4.55d78',
+                                          parent: [Circular *8],
+                                          data: 'd',
+                                          nud: [Function: itself]
+                                        },
+                                        <ref *10> {
+                                          mode: 11,
+                                          token: {
+                                            type: 'operator',
+                                            data: '=',
+                                            position: 37,
+                                            line: 3,
+                                            column: 11,
+                                            preceding: [
+                                              {
+                                                type: 'whitespace',
+                                                data: ' ',
+                                                position: 36,
+                                                line: 3,
+                                                column: 10
+                                              }
+                                            ]
+                                          },
+                                          children: [
+                                            <ref *9> {
+                                              token: {
+                                                type: 'operator',
+                                                data: '(',
+                                                position: 47,
+                                                line: 3,
+                                                column: 20
+                                              },
+                                              type: 'call',
+                                              data: '(',
+                                              children: [
+                                                {
+                                                  token: {
+                                                    type: 'builtin',
+                                                    data: 'distance',
+                                                    position: 39,
+                                                    line: 3,
+                                                    column: 20,
+                                                    preceding: [
+                                                      {
+                                                        type: 'whitespace',
+                                                        data: ' ',
+                                                        position: 38,
+                                                        line: 3,
+                                                        column: 12
+                                                      }
+                                                    ]
+                                                  },
+                                                  type: 'builtin',
+                                                  data: 'distance',
+                                                  parent: [Circular *9]
+                                                },
+                                                {
+                                                  token: {
+                                                    type: 'ident',
+                                                    data: 'uv',
+                                                    position: 48,
+                                                    line: 3,
+                                                    column: 23
+                                                  },
+                                                  type: 'ident',
+                                                  parent: [Circular *9]
+                                                }
+                                              ],
+                                              parent: [Circular *10]
+                                            }
+                                          ],
+                                          type: 'expr',
+                                          id: '19f53e77.7dd2e2',
+                                          expecting: [ ',', ';' ],
+                                          parent: [Circular *8],
+                                          tokens: [
+                                            {
+                                              type: 'builtin',
+                                              data: 'distance',
+                                              position: 39,
+                                              line: 3,
+                                              column: 20,
+                                              preceding: [
+                                                {
+                                                  type: 'whitespace',
+                                                  data: ' ',
+                                                  position: 38,
+                                                  line: 3,
+                                                  column: 12
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              type: 'operator',
+                                              data: '(',
+                                              position: 47,
+                                              line: 3,
+                                              column: 20
+                                            },
+                                            {
+                                              type: 'ident',
+                                              data: 'uv',
+                                              position: 48,
+                                              line: 3,
+                                              column: 23
+                                            },
+                                            {
+                                              type: 'operator',
+                                              data: ')',
+                                              position: 50,
+                                              line: 3,
+                                              column: 23
+                                            }
+                                          ],
+                                          parenlevel: 0,
+                                          bracelevel: 0
+                                        }
+                                      ],
+                                      type: 'decllist',
+                                      id: '8233c785.af2988',
+                                      parent: [Circular *7]
+                                    }
+                                  ],
+                                  type: 'decl',
+                                  id: '786face.4496554',
+                                  flags: 255,
+                                  parent: [Circular *11],
+                                  stage: [Circular *7]
+                                }
+                              ],
+                              type: 'stmt',
+                              id: 'e26e6a1.8f08598',
+                              parent: [Circular *12]
+                            },
+                            <ref *15> {
+                              mode: 1,
+                              token: {
+                                type: 'keyword',
+                                data: 'return',
+                                position: 55,
+                                line: 4,
+                                column: 8,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: '\n  ',
+                                    position: 52,
+                                    line: 4,
+                                    column: 2
+                                  }
+                                ]
+                              },
+                              children: [
+                                <ref *14> {
+                                  mode: 17,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'return',
+                                    position: 55,
+                                    line: 4,
+                                    column: 8,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n  ',
+                                        position: 52,
+                                        line: 4,
+                                        column: 2
+                                      }
+                                    ]
+                                  },
+                                  children: [
+                                    <ref *13> {
+                                      mode: 11,
+                                      token: {
+                                        type: 'ident',
+                                        data: 'd',
+                                        position: 62,
+                                        line: 4,
+                                        column: 10,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 61,
+                                            line: 4,
+                                            column: 9
+                                          }
+                                        ]
+                                      },
+                                      children: [
+                                        {
+                                          token: {
+                                            type: 'ident',
+                                            data: 'd',
+                                            position: 62,
+                                            line: 4,
+                                            column: 10,
+                                            preceding: [
+                                              {
+                                                type: 'whitespace',
+                                                data: ' ',
+                                                position: 61,
+                                                line: 4,
+                                                column: 9
+                                              }
+                                            ]
+                                          },
+                                          type: 'ident',
+                                          parent: [Circular *13]
+                                        }
+                                      ],
+                                      type: 'expr',
+                                      id: 'ad1f48a8.e7ecf8',
+                                      expecting: [ ';' ],
+                                      parent: [Circular *14],
+                                      tokens: [
+                                        {
+                                          type: 'ident',
+                                          data: 'd',
+                                          position: 62,
+                                          line: 4,
+                                          column: 10,
+                                          preceding: [
+                                            {
+                                              type: 'whitespace',
+                                              data: ' ',
+                                              position: 61,
+                                              line: 4,
+                                              column: 9
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      parenlevel: 0,
+                                      bracelevel: 0
+                                    }
+                                  ],
+                                  type: 'return',
+                                  id: '8045fbbf.c13238',
+                                  parent: [Circular *15],
+                                  stage: 2
+                                }
+                              ],
+                              type: 'stmt',
+                              id: '79904980.56bf68',
+                              parent: [Circular *12]
+                            }
+                          ],
+                          type: 'stmtlist',
+                          id: '6e862292.a734dc',
+                          expecting: '}',
+                          parent: [Circular *2],
+                          stage: [Circular *12],
+                          scope: {
+                            d: <ref *16> {
+                              mode: 0,
+                              token: {
+                                type: 'ident',
+                                data: 'd',
+                                position: 35,
+                                line: 3,
+                                column: 9,
+                                preceding: [
+                                  {
+                                    type: 'whitespace',
+                                    data: ' ',
+                                    position: 34,
+                                    line: 3,
+                                    column: 8
+                                  }
+                                ]
+                              },
+                              children: [],
+                              type: 'ident',
+                              id: 'a00d0cd4.55d78',
+                              parent: <ref *8> {
+                                mode: 7,
+                                token: {
+                                  type: 'operator',
+                                  data: '=',
+                                  position: 37,
+                                  line: 3,
+                                  column: 11,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: ' ',
+                                      position: 36,
+                                      line: 3,
+                                      column: 10
+                                    }
+                                  ]
+                                },
+                                children: [
+                                  [Circular *16],
+                                  <ref *10> {
+                                    mode: 11,
+                                    token: {
+                                      type: 'operator',
+                                      data: '=',
+                                      position: 37,
+                                      line: 3,
+                                      column: 11,
+                                      preceding: [
+                                        {
+                                          type: 'whitespace',
+                                          data: ' ',
+                                          position: 36,
+                                          line: 3,
+                                          column: 10
+                                        }
+                                      ]
+                                    },
+                                    children: [
+                                      <ref *9> {
+                                        token: {
+                                          type: 'operator',
+                                          data: '(',
+                                          position: 47,
+                                          line: 3,
+                                          column: 20
+                                        },
+                                        type: 'call',
+                                        data: '(',
+                                        children: [
+                                          {
+                                            token: {
+                                              type: 'builtin',
+                                              data: 'distance',
+                                              position: 39,
+                                              line: 3,
+                                              column: 20,
+                                              preceding: [
+                                                {
+                                                  type: 'whitespace',
+                                                  data: ' ',
+                                                  position: 38,
+                                                  line: 3,
+                                                  column: 12
+                                                }
+                                              ]
+                                            },
+                                            type: 'builtin',
+                                            data: 'distance',
+                                            parent: [Circular *9]
+                                          },
+                                          {
+                                            token: {
+                                              type: 'ident',
+                                              data: 'uv',
+                                              position: 48,
+                                              line: 3,
+                                              column: 23
+                                            },
+                                            type: 'ident',
+                                            parent: [Circular *9]
+                                          }
+                                        ],
+                                        parent: [Circular *10]
+                                      }
+                                    ],
+                                    type: 'expr',
+                                    id: '19f53e77.7dd2e2',
+                                    expecting: [ ',', ';' ],
+                                    parent: [Circular *8],
+                                    tokens: [
+                                      {
+                                        type: 'builtin',
+                                        data: 'distance',
+                                        position: 39,
+                                        line: 3,
+                                        column: 20,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: ' ',
+                                            position: 38,
+                                            line: 3,
+                                            column: 12
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        type: 'operator',
+                                        data: '(',
+                                        position: 47,
+                                        line: 3,
+                                        column: 20
+                                      },
+                                      {
+                                        type: 'ident',
+                                        data: 'uv',
+                                        position: 48,
+                                        line: 3,
+                                        column: 23
+                                      },
+                                      {
+                                        type: 'operator',
+                                        data: ')',
+                                        position: 50,
+                                        line: 3,
+                                        column: 23
+                                      }
+                                    ],
+                                    parenlevel: 0,
+                                    bracelevel: 0
+                                  }
+                                ],
+                                type: 'decllist',
+                                id: '8233c785.af2988',
+                                parent: <ref *7> {
+                                  mode: 6,
+                                  token: {
+                                    type: 'keyword',
+                                    data: 'float',
+                                    position: 29,
+                                    line: 3,
+                                    column: 7,
+                                    preceding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n  ',
+                                        position: 26,
+                                        line: 3,
+                                        column: 2
+                                      }
+                                    ],
+                                    succeeding: [
+                                      {
+                                        type: 'whitespace',
+                                        data: '\n',
+                                        position: 64,
+                                        line: 5,
+                                        column: 0
+                                      }
+                                    ]
+                                  },
+                                  children: [
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: 'bb2bf164.5ca7c',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '9e14b844.d5c668',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '4262eece.7907b',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 22,
+                                      token: { data: '', position: 29 },
+                                      children: [],
+                                      type: 'placeholder',
+                                      id: '96f15aa.28eafa8',
+                                      parent: [Circular *7]
+                                    },
+                                    {
+                                      mode: 15,
+                                      token: {
+                                        type: 'keyword',
+                                        data: 'float',
+                                        position: 29,
+                                        line: 3,
+                                        column: 7,
+                                        preceding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: '\n  ',
+                                            position: 26,
+                                            line: 3,
+                                            column: 2
+                                          }
+                                        ],
+                                        succeeding: [
+                                          {
+                                            type: 'whitespace',
+                                            data: '\n',
+                                            position: 64,
+                                            line: 5,
+                                            column: 0
+                                          }
+                                        ]
+                                      },
+                                      children: [],
+                                      type: 'keyword',
+                                      id: '48445c06.4ac164',
+                                      parent: [Circular *7]
+                                    },
+                                    [Circular *8]
+                                  ],
+                                  type: 'decl',
+                                  id: '786face.4496554',
+                                  flags: 255,
+                                  parent: <ref *11> {
+                                    mode: 1,
+                                    token: {
+                                      type: 'keyword',
+                                      data: 'float',
+                                      position: 29,
+                                      line: 3,
+                                      column: 7,
+                                      preceding: [
+                                        {
+                                          type: 'whitespace',
+                                          data: '\n  ',
+                                          position: 26,
+                                          line: 3,
+                                          column: 2
+                                        }
+                                      ],
+                                      succeeding: [
+                                        {
+                                          type: 'whitespace',
+                                          data: '\n',
+                                          position: 64,
+                                          line: 5,
+                                          column: 0
+                                        }
+                                      ]
+                                    },
+                                    children: [ [Circular *7] ],
+                                    type: 'stmt',
+                                    id: 'e26e6a1.8f08598',
+                                    parent: [Circular *12]
+                                  },
+                                  stage: [Circular *7]
+                                }
+                              },
+                              data: 'd',
+                              nud: [Function: itself]
+                            }
+                          }
+                        }
+                      ],
+                      type: 'function',
+                      id: '90054f1e.73137',
+                      parent: <ref *1> {
+                        mode: 6,
+                        token: {
+                          type: 'keyword',
+                          data: 'float',
+                          position: 1,
+                          line: 2,
+                          column: 5,
+                          preceding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n',
+                              position: 0,
+                              line: 2,
+                              column: 0
+                            }
+                          ]
+                        },
+                        children: [
+                          {
+                            mode: 22,
+                            token: { data: '', position: 1 },
+                            children: [],
+                            type: 'placeholder',
+                            id: 'c61fbbf0.64bbf8',
+                            parent: [Circular *1]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 1 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '52dbd533.bfde3c',
+                            parent: [Circular *1]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 1 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '8452c220.a97a6',
+                            parent: [Circular *1]
+                          },
+                          {
+                            mode: 22,
+                            token: { data: '', position: 1 },
+                            children: [],
+                            type: 'placeholder',
+                            id: '106f838d.bd906c',
+                            parent: [Circular *1]
+                          },
+                          {
+                            mode: 15,
+                            token: {
+                              type: 'keyword',
+                              data: 'float',
+                              position: 1,
+                              line: 2,
+                              column: 5,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n',
+                                  position: 0,
+                                  line: 2,
+                                  column: 0
+                                }
+                              ]
+                            },
+                            children: [],
+                            type: 'keyword',
+                            id: 'feb4f37.9c9db1',
+                            parent: [Circular *1]
+                          },
+                          [Circular *2]
+                        ],
+                        type: 'decl',
+                        id: 'ecd5793.39c4a88',
+                        flags: 255,
+                        parent: <ref *17> {
+                          mode: 1,
+                          token: {
+                            type: 'keyword',
+                            data: 'float',
+                            position: 1,
+                            line: 2,
+                            column: 5,
+                            preceding: [
+                              {
+                                type: 'whitespace',
+                                data: '\n',
+                                position: 0,
+                                line: 2,
+                                column: 0
+                              }
+                            ]
+                          },
+                          children: [ [Circular *1] ],
+                          type: 'stmt',
+                          id: '30479ef8.d8c272',
+                          parent: [Circular *18]
+                        },
+                        stage: 8
+                      },
+                      stage: <ref *17> {
+                        mode: 1,
+                        token: {
+                          type: 'keyword',
+                          data: 'float',
+                          position: 1,
+                          line: 2,
+                          column: 5,
+                          preceding: [
+                            {
+                              type: 'whitespace',
+                              data: '\n',
+                              position: 0,
+                              line: 2,
+                              column: 0
+                            }
+                          ]
+                        },
+                        children: [
+                          <ref *1> {
+                            mode: 6,
+                            token: {
+                              type: 'keyword',
+                              data: 'float',
+                              position: 1,
+                              line: 2,
+                              column: 5,
+                              preceding: [
+                                {
+                                  type: 'whitespace',
+                                  data: '\n',
+                                  position: 0,
+                                  line: 2,
+                                  column: 0
+                                }
+                              ]
+                            },
+                            children: [
+                              {
+                                mode: 22,
+                                token: { data: '', position: 1 },
+                                children: [],
+                                type: 'placeholder',
+                                id: 'c61fbbf0.64bbf8',
+                                parent: [Circular *1]
+                              },
+                              {
+                                mode: 22,
+                                token: { data: '', position: 1 },
+                                children: [],
+                                type: 'placeholder',
+                                id: '52dbd533.bfde3c',
+                                parent: [Circular *1]
+                              },
+                              {
+                                mode: 22,
+                                token: { data: '', position: 1 },
+                                children: [],
+                                type: 'placeholder',
+                                id: '8452c220.a97a6',
+                                parent: [Circular *1]
+                              },
+                              {
+                                mode: 22,
+                                token: { data: '', position: 1 },
+                                children: [],
+                                type: 'placeholder',
+                                id: '106f838d.bd906c',
+                                parent: [Circular *1]
+                              },
+                              {
+                                mode: 15,
+                                token: {
+                                  type: 'keyword',
+                                  data: 'float',
+                                  position: 1,
+                                  line: 2,
+                                  column: 5,
+                                  preceding: [
+                                    {
+                                      type: 'whitespace',
+                                      data: '\n',
+                                      position: 0,
+                                      line: 2,
+                                      column: 0
+                                    }
+                                  ]
+                                },
+                                children: [],
+                                type: 'keyword',
+                                id: 'feb4f37.9c9db1',
+                                parent: [Circular *1]
+                              },
+                              [Circular *2]
+                            ],
+                            type: 'decl',
+                            id: 'ecd5793.39c4a88',
+                            flags: 255,
+                            parent: [Circular *17],
+                            stage: 8
+                          }
+                        ],
+                        type: 'stmt',
+                        id: '30479ef8.d8c272',
+                        parent: [Circular *18]
+                      }
+                    },
+                    stage: 1
+                  },
+                  stage: [Circular *4]
+                }
+              },
+              data: 'uv',
+              nud: [Function: itself]
+            }
+          },
+          data: 'maskSDF'
+        }
+      }
+    }
+
+      at Object.obtainSourceFunction (src/index.ts:176:9)
+          at Array.forEach (<anonymous>)
+
+  console.log
+    functionCallString!!! 
+    
+    
+    float  maskSDF(vec2 uv) {
+      
+      
+      
+      float  d,  ( distanceuv
+      
+      return   d;}
+    
+    #pragma glslify2: export(maskSDF)
+
+      at Object.obtainSourceFunction (src/index.ts:183:13)
+          at Array.forEach (<anonymous>)
+
+  console.log
+    <ref *1> {
+      mode: 2,
+      token: { type: '(program)', data: '(program)' },
+      children: [
+        {
+          mode: 1,
+          token: [Object],
+          children: [Array],
+          type: 'stmt',
+          id: '30479ef8.d8c272',
+          parent: [Circular *1]
+        },
+        {
+          mode: 14,
+          token: [Object],
+          children: [],
+          type: 'preprocessor',
+          id: 'b410cd31.e0c0e',
+          parent: [Circular *1]
+        }
+      ],
+      type: 'stmtlist',
+      id: 'f72ee3d6.9d85c',
+      expecting: '(eof)',
+      parent: undefined,
+      stage: [Circular *1],
+      scope: {
+        maskSDF: {
+          mode: 0,
+          token: [Object],
+          children: [],
+          type: 'ident',
+          id: '9068d01e.7cd6f',
+          parent: [Object],
+          scope: [Object],
+          data: 'maskSDF'
+        }
+      }
+    }
+
+      at Object.obtainSourceFunction (src/index.ts:185:13)
+          at Array.forEach (<anonymous>)
+

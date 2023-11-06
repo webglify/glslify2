@@ -1,0 +1,8 @@
+{
+  "workspaces": [
+    "./packages/*"
+  ],
+  "devDependencies": {
+    "@parcel/transformer-glsl": "^2.8.3"
+  }
+}
