@@ -332,7 +332,6 @@ const getFunctionBodyDecl = (bodyTokens) => {
   })
 
   //console.log('function decl', declarations)
-  console.log(util.inspect(declarations, {showHidden: false, depth: null, colors: false}))
 
   return declarations;
 }
@@ -463,6 +462,10 @@ class Cursor2 {
     }
   }
 
+  get length () {
+    return this.indexQueue.length
+  }
+
   get prev(){
     if(this.pos != 0){
       return this.indexQueue[this.pos - 1.];
@@ -531,27 +534,12 @@ class Cursor2 {
 export const ShaderProcessor = ({
   parse(glslCode: string){
 
-    const string = `
-    a + (b + (c + d + f));
-    `
-    const string0 = `
-    a * (b + c);
-    `
-    const string2 = `
-    v + d * (c + a)
-    `
-
-    const string3 = `
-    (a + b) * c * d * n * (f + q * w)
-    `
-    
     const inlcudePositionData = false
     const tokens = tokenize(glslCode, {version: '300 es'}).map((token) => {
       if(inlcudePositionData) return token
       const {type, data} = token
       return {type, data}
     });
-
 
     const indecies = tokens
     .map((token, i) => {
@@ -562,7 +550,7 @@ export const ShaderProcessor = ({
     
     const cursor = new Cursor2(indecies)
 
-    const declarations = parseTokens3(tokens, cursor, null)
+    const declarations = parseTokens(tokens, cursor, null)
 
     
     return declarations
@@ -668,12 +656,19 @@ const addBinaryOperation = (tokens, cursor, bo) => {
   // right operand parenteses
   if(next.data === '(') {
     const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
-    const aggr = parseTokens3(tokens, c1.forward(), null)
+    const aggr = parseTokens(tokens, c1.forward(), null)
     const nextBO =  new BinaryOperation({...aggr, parentheses: true})
 
     const pb = createBinaryOperation(nextBO, op, prev, bo) 
 
     return [c2, pb]
+  }
+  if(['builtin', 'keyword'].includes(next.type)){
+    const [_cursor, _aggr] = addFunctionCall(tokens, cursor.forward(), null)
+    
+    const pb = createBinaryOperation(_aggr, op, prev, bo) 
+
+    return [_cursor, pb]
   }
 
   const pb = createBinaryOperation(next, op, prev, bo) 
@@ -682,28 +677,119 @@ const addBinaryOperation = (tokens, cursor, bo) => {
 }
 
 
-const parseTokens3 = (tokens, cursor, aggs: any) => {
+const obtainFunctionArguments = (tokens, cursor) => {
 
-    if(cursor.eof) return aggs
+  const argsCursor = []
+
+  const split = (groups = [[]], cursor2, depth = 0) => {
+    
+    if(cursor2.eof)  {
+      argsCursor.push(new Cursor2(groups[groups.length - 1]))
+      return groups
+    } 
+    
+    const currentToken = tokens[cursor2.current]
+    
+    if(currentToken.data === ',' && depth === 0){
+      argsCursor.push(new Cursor2(groups[groups.length - 1]))
+      groups.push([])
+      return split(groups, cursor2.forward())
+    }
+
+    groups[groups.length - 1].push(cursor2.current)
+    
+    if(currentToken.data === '('){
+      return split(groups, cursor2.forward(), depth + 1)
+    }
+
+    if(currentToken.data === ')'){
+      return split(groups, cursor2.forward(), depth - 1)
+    }
+    
+    return split(groups, cursor2.forward(), depth)
+
+  }
+  
+  const groups = split([[]], cursor.clone())
+
+  return argsCursor
+
+}
+
+export class FunctionCall {
+
+  name
+  args
+  
+  constructor (token, args = []) {
+    this.name = token.data
+    this.args = args
+  }
+
+  addArgument(arg) {
+    this.args.push(arg)
+  }
+}
+export class ConstructorCall extends FunctionCall{}
+
+const addFunctionCall = (tokens, cursor, stmt) => {
+
+  const currentToken = tokens[cursor.current]
+  const nextToken = tokens[cursor.next]
+  
+  // function arguments
+  if(['builtin', 'keyword'].includes(currentToken.type) && nextToken.data === '(') {
+    const fc = currentToken.type === 'builtin' 
+    ? new FunctionCall(currentToken)
+    : new ConstructorCall(currentToken)
+    const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+    const argGroups = obtainFunctionArguments(tokens, c1)
+    
+    argGroups.forEach(argCursor => {
+      if(argCursor.length === 1) {
+        const arg = tokens[argCursor.current]
+        fc.addArgument(arg)
+      }else {
+        const arg = parseTokens(tokens, argCursor, null)
+        fc.addArgument(arg)
+      }
+      
+    })
+
+    return [c2, fc]
+  }
+
+  return [cursor, stmt]
+}
+
+
+const parseTokens = (tokens, cursor, stmt: any) => {
+
+    if(cursor.eof) return stmt
 
     const currentToken = tokens[cursor.current]
+
+    
+    if(['builtin', 'keyword'].includes(currentToken.type)){
+      const [_cursor, _stmt] = addFunctionCall(tokens, cursor, stmt)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
     
     // left operand parenteses
     if(['('].includes(currentToken.data)) {
 
       const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward())
-      const aggr = parseTokens3(tokens, c1.forward(), null)
-      const b = new BinaryOperation({...aggr, parentheses: true})      
-      return parseTokens3(tokens, c2, b)
-
+      const aggr = parseTokens(tokens, c1.forward(), null)
+      const stmt = new BinaryOperation({...aggr, parentheses: true})      
+      return parseTokens(tokens, c2, stmt)
 
     }
 
     if(['+', '-', '*', '/'].includes(currentToken.data)) {
-      const [_cursor, _agg] = addBinaryOperation(tokens, cursor, aggs)
+      const [_cursor, _stmt] = addBinaryOperation(tokens, cursor, stmt)
       
-      return parseTokens3(tokens, _cursor.forward(), _agg)
+      return parseTokens(tokens, _cursor.forward(), _stmt)
     }
 
-    return parseTokens3(tokens, cursor.forward(), aggs)
+    return parseTokens(tokens, cursor.forward(), stmt)
 }
