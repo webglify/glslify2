@@ -531,61 +531,6 @@ class Cursor2 {
 export const ShaderProcessor = ({
   parse(glslCode: string){
 
-    
-    const tokens = tokenize(glslCode, {version: '300 es'});
-
-
-    const indecies = tokens
-    .map((token, i) => {
-      return token.type !== 'whitespace' ? i : undefined
-    })
-    .filter(i => i)
-    
-    const cursor = new Cursor2(indecies)
-
-    const declarations = parseTokens3(tokens, cursor, null)
-
-    //console.log(FunctionDeclarationsStack)
-    console.log(util.inspect(declarations, {showHidden: false, depth: null, colors: false}))
-
-  },
-
-//   dummyParse(){
-
-
-//     const string = `{
-//         (a, b, (c, (d, f, g)))
-//     }`
-
-//     const stringOp = `
-//     a + b
-//     `
-//     const tokens = tokenize(stringOp, {version: '300 es'});
-
-//     const cursor = new Cursor()
-
-//     const ctokens = tokens
-//     .filter((token, i) => {
-//       return token.type !== 'whitespace'
-//     })
-//     console.log('tokens', ctokens)
-
-//     ctokens.forEach((token, i) => {
-//       cursor.right(i)
-
-//       const decl = parseBlock(ctokens, cursor)
-// //      console.log('decl', util.inspect(decl, {showHidden: false, depth: null, colors: false}))
-//       //decl && console.log('decl')
-//       decl &&  console.log('decl', util.inspect(decl, {showHidden: false, depth: null, colors: false}))
-
-//     })
-
-//     //args && console.log('parseBlock', args)
-
-
-//   },
-  dummyParseBinary(){
-
     const string = `
     a + (b + (c + d + f));
     `
@@ -599,12 +544,13 @@ export const ShaderProcessor = ({
     const string3 = `
     (a + b) * c * d * n * (f + q * w)
     `
-
-    const string4 = `
-    a * (b + c) + (d*f)
-    `
     
-    const tokens = tokenize(string4, {version: '300 es'});
+    const inlcudePositionData = false
+    const tokens = tokenize(glslCode, {version: '300 es'}).map((token) => {
+      if(inlcudePositionData) return token
+      const {type, data} = token
+      return {type, data}
+    });
 
 
     const indecies = tokens
@@ -613,14 +559,13 @@ export const ShaderProcessor = ({
     })
     .filter(i => i)
     
-    console.log('tokens', indecies, tokens[11])
     
     const cursor = new Cursor2(indecies)
 
     const declarations = parseTokens3(tokens, cursor, null)
 
-    console.log('declarations', util.inspect(declarations, {showHidden: false, depth: null, colors: false}))
-
+    
+    return declarations
 
 
 
@@ -653,7 +598,7 @@ const obtainParenthesesScopeCursor = (tokens, cursor) => {
 
 
 
-class BinaryOperation {
+export class BinaryOperation {
 
   op
   left
