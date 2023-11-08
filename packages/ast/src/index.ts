@@ -4,6 +4,7 @@ import {filter, map, scan, mergeMap, toArray, buffer, takeUntil, reduce, endWith
 import {Token} from './grammar'
 import util from 'util'
 import { group } from 'console'
+import { isReturnStatement } from '@babel/types'
 
 const typeMap = {
   'layout': 'LayoutDeclaration',
@@ -450,6 +451,8 @@ class Cursor2 {
     this.pos = 0
   }
 
+  
+
   get eof() {
     return this.pos == (this.indexQueue.length)
   }
@@ -514,11 +517,10 @@ class Cursor2 {
     return this.pos === 0;
   }
 
-  split(cursor2: Cursor2, from: number = 0):[Cursor2, Cursor2] {
-    const pos2 = cursor2.pos
+  split(from: number = 0):[Cursor2, Cursor2] {
     return [
-      new Cursor2(this.indexQueue.slice(from, pos2 )), 
-      new Cursor2(this.indexQueue.slice(pos2 ))
+      new Cursor2(this.indexQueue.slice(from, this.pos )), 
+      new Cursor2(this.indexQueue.slice(this.pos ))
     ]
   }
 
@@ -532,35 +534,237 @@ class Cursor2 {
 }
 
 export const ShaderProcessor = ({
-  parse(glslCode: string){
-
-    const inlcudePositionData = false
-    const tokens = tokenize(glslCode, {version: '300 es'}).map((token) => {
+  tokens: [],
+  cursor: null,
+  tokenize(glslCode: string, inlcudePositionData = false){
+    this.tokens = tokenize(glslCode, {version: '300 es'}).map((token) => {
       if(inlcudePositionData) return token
       const {type, data} = token
       return {type, data}
     });
 
-    console.log('tokens', tokens)
-
-    const indecies = tokens
+    const indeces = this.tokens
     .map((token, i) => {
       return token.type !== 'whitespace' ? i : undefined
     })
     .filter(i => i)
     
     
-    const cursor = new Cursor2(indecies)
+    this.cursor = new Cursor2(indeces)
 
-    const declarations = parseTokens(tokens, cursor, null)
+    return this
+  },
+  
+  parseFile(){
+    return parseFile(this.tokens, this.cursor)
+  },
+  parseTokens(){
+    return parseTokens(this.tokens, this.cursor, null)
+  }
+
+})
+
+export class ParameterDeclaration {
+  dataType
+  name
+  storageIdentifier
+  
+  constructor(dataType, name, storageIdentifier?) {
+    this.name = name
+    this.dataType = dataType
+    if(storageIdentifier){
+      this.storageIdentifier = storageIdentifier
+    }
+    
+  }
+}
+
+const createParameterDeclaration = (tokens, cursor) => {
+  const ct = tokens[cursor.current]
+  const args = []
+  if(['in', 'out'].includes(ct.data)) {
+    args.push(ct.data)
+    cursor.forward()
+  }
+  const ct2 = tokens[cursor.current]
+  args.splice(0, 0, ct2.data)
+  
+  cursor.forward()
+  const ct3 = tokens[cursor.current]
+  args.splice(1, 0, ct3.data)
+
+  return new ParameterDeclaration(args[0], args[1], args[2])
+}
+
+
+
+const getFuncParameters = (tokens, cursor): false | [c: Cursor2, any]  => {
+
+  const currentToken = tokens[cursor.current]
+  if(currentToken.data !== '(') return false
+
+
+  const obtainParamsCursors = (indicies: number[][] = [[]], cursors: Cursor2[] = []) => {
+    cursor.forward()
+    
+    const ct = tokens[cursor.current]
+    if(ct.data === '(' || cursor.eof) {
+      throw new Error('function paramters signature is not valid')
+    }
+
+    if( ct.data === ')') {
+      cursors[indicies.length - 1] = new Cursor2(indicies[indicies.length - 1])
+      return cursors
+    }
 
     
-    return declarations
+    if( ct.data === ',') {
+      cursors[indicies.length - 1] = new Cursor2(indicies[indicies.length - 1])
+      indicies.push([])
+      return obtainParamsCursors(indicies, cursors)
+    }
 
+    indicies[indicies.length - 1].push(cursor.current)
+    return obtainParamsCursors(indicies, cursors)
+    
+  }
 
+  const pCursors = obtainParamsCursors()
+  const parameters = pCursors.map(pCursor => createParameterDeclaration(tokens, pCursor))
+
+  return [cursor, parameters]
+}
+
+const getBody = (tokens, cursor): false | [c: Cursor2, any]  => {
+
+  const ct = tokens[cursor.current]
+  if(ct.data !== '{') return
+
+  
+  const obtainBodyCursor = (cursor2, depth=0) => {
+
+    const ct2 = tokens[cursor2.current]
+    if(ct2.data === '{'){
+      return obtainBodyCursor(cursor2.forward(), depth + 1)
+    }
+    if(ct2.data === '}'){
+      if(depth > 0) {
+        return obtainBodyCursor(cursor2.forward(), depth - 1)
+      }
+
+      return cursor2.split(cursor.pos)      
+    }
+    
+    return obtainBodyCursor(cursor2.forward(), depth)
 
   }
-})
+
+  const [c1, c2] = obtainBodyCursor(cursor.forward().clone())
+
+  const stmt = parseBody(tokens, c1)
+
+  return [c2, stmt]
+} 
+
+export class FunctionDeclaration {
+  name
+  returnType
+  parameters: ParameterDeclaration[]
+  body
+
+  constructor(name, returnType, parameters, body){
+    this.name = name
+    this.returnType = returnType
+    this.parameters = parameters
+    this.body = body
+  }
+
+}
+
+const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor2, any]  => {
+
+  const currentToken = tokens[cursor.current]
+  if(currentToken.type !== 'ident') return false
+
+  const prevToken = tokens[cursor.prev]
+  if(prevToken?.type !== 'keyword') return false
+
+  const nextToken = tokens[cursor.next]
+  if(nextToken?.data !== '(') return false
+
+  const p = getFuncParameters(tokens, cursor.clone().forward())
+  if(!p) return false
+  const [pCursor, pStmts] = p
+  
+  const b = getBody(tokens, pCursor.forward())
+  if(!b) return false
+
+  const [bCursor, bStmts] = b
+
+  const fd = new FunctionDeclaration(
+    currentToken.data,
+    prevToken.data,
+    pStmts,
+    bStmts
+  )
+
+  console.log('fd', fd)
+  return [bCursor, fd]
+
+
+}
+
+const parseFile = (tokens, cursor, stmts = []) => {
+
+  if(cursor.eof) return stmts
+
+  const f = getFunctionDeclaration(tokens, cursor)
+  if(f) {
+    const [_cursor, stmt] = f
+    stmts.push(stmt)
+    return parseFile(tokens, _cursor, stmts)
+  }
+
+
+  return parseFile(tokens, cursor.forward(), stmts)
+
+
+
+}
+
+
+
+const parseBody = (tokens, cursor) => {
+
+  const obtainScope = (cursor2, locsCursor: number[][] = [[]], acc: Cursor2[] = []) => {
+
+    if(cursor2.eof){      
+      return acc
+    }
+    
+    locsCursor[locsCursor.length - 1].push(cursor2.current)
+
+    const currentToken = tokens[cursor2.current]
+
+    if(currentToken.data === ';'){
+      
+      acc[locsCursor.length - 1] = new Cursor2(locsCursor[locsCursor.length - 1])
+      locsCursor.push([])
+      return obtainScope(cursor2.forward(), locsCursor, acc)
+    }
+
+    return obtainScope(cursor2.forward(), locsCursor, acc)
+  }
+
+  const locsC = obtainScope(cursor)
+
+  const stmts = locsC.map(locCursor => parseTokens(tokens, locCursor, null))
+  console.log('stmts', locsC)
+
+  return stmts
+  
+
+}
 
 const obtainParenthesesScopeCursor = (tokens, cursor) => {
   const obtainScope = (cursor2, depth = 0): [Cursor2, Cursor2] => {
@@ -569,7 +773,7 @@ const obtainParenthesesScopeCursor = (tokens, cursor) => {
     if (currentToken.data == ')'){
       if(depth === 0) {
         
-        const split = cursor.split(cursor2, cursor.pos)
+        const split = cursor2.split(cursor.pos)
         return split
       }
       else return obtainScope(cursor2, depth - 1)
@@ -804,8 +1008,6 @@ const addVariableDeclaration = (tokens, cursor) => {
   const dataType = tokens[cursor.prev]
   const identifier = tokens[cursor.current]
 
-  
-
   const initializer = parseTokens(tokens, cursor.forward(), null)
   const vd = new VariableDeclaration(dataType, identifier, initializer)
   return [cursor.toEnd(), vd]
@@ -882,14 +1084,35 @@ const addLiteralIdent = (tokens, cursor) => {
   return [cursor, createLiteralOrIdent(tokens[cursor.current])]
 }
 
+
+const isReturnToken = (tokens, cursor) => {
+  
+  return tokensEqual(s(tokens[cursor.current]), ['keyword', 'return'])
+  
+}
+
+export class ReturnStatement {
+  argument
+  constructor(argument){
+    this.argument = argument
+  }
+}
+
+const addReturnStatement = (tokens, cursor) => {
+  const stmt = parseTokens(tokens, cursor.forward(), null)
+  return [cursor.toEnd(), new ReturnStatement(stmt)]
+}
+
 const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(cursor.eof) return stmt
 
     const currentToken = tokens[cursor.current]
 
-    console.log('currentToken', currentToken)
-
+    if(isReturnToken(tokens, cursor)) {
+      const [_cursor, _stmt] = addReturnStatement(tokens, cursor)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
     
     if(isFunctionCallToken(tokens, cursor)){
       const [_cursor, _stmt] = addFunctionCall(tokens, cursor)
@@ -898,6 +1121,7 @@ const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(isVariableDeclarationToken(tokens, cursor)){
       const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
+      console.log('_stmt', _stmt, _cursor)
       return parseTokens(tokens, _cursor, _stmt)
     }
 

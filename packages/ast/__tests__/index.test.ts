@@ -1,6 +1,6 @@
 
-import { ShaderProcessor } from "../src";
-import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier} from '../src/index'
+import { FunctionDeclaration, ShaderProcessor } from "../src";
+import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration} from '../src/index'
 import util from 'util'
 // const string = `
   // a + (b + (c + d + f));
@@ -16,13 +16,8 @@ import util from 'util'
   // (a + b) * c * d * n * (f + q * w)
   // `
 
-const testCases = [
-  // {
-  //   string: `
-  //     a * b
-  //   `,
-  //   expectedAST: null
-  // },
+const locTestCases = [
+  
   {
     string: `
     a * (b + c) + (d*f)
@@ -122,6 +117,33 @@ const testCases = [
       {data: 'b', type: 'ident'},
       new Literal('1', 'integer')
     )
+  },
+ 
+]
+
+const completeTestCases = [
+  {
+    string: `
+    vec2 fnName (float a, vec2 b) { 
+      vec2 d = a;
+      return d;
+    }
+    `,
+    expectedAST: [new FunctionDeclaration(
+      "fnName", 
+      "vec2",
+      [
+        new ParameterDeclaration("float", "a"),
+        new ParameterDeclaration("vec2", "b"),
+      ],
+      [
+      new VariableDeclaration(
+        {data: 'vec2'},
+        {data: 'd'},
+        new Identifier('a')
+      ),
+      new ReturnStatement(new Identifier('d'))
+    ])]
   }
 ]
 
@@ -131,9 +153,9 @@ describe('Shader Processor', () => {
   
 
   // A helper function to run the common logic
-  const runTest = (string, expectedAST) => {
+  const runFileTest = (string, expectedAST) => {
     
-    const AST = ShaderProcessor.parse(string);
+    const AST = ShaderProcessor.tokenize(string).parseFile();
     console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
     
@@ -141,10 +163,27 @@ describe('Shader Processor', () => {
 
   };
 
+  const runLocTest = (string, expectedAST) => {
+    
+    const AST = ShaderProcessor.tokenize(string).parseTokens();
+    console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
+
+    
+    expect(AST).toEqual(expectedAST);
+
+  };
+
+
   // Iterate over each test case
-  testCases.forEach((testCase, i) => {
+
+  locTestCases.forEach((testCase, i) => {
     it(testCase.string.trim(), () => {
-      runTest(testCase.string, testCase.expectedAST);
+      runLocTest(testCase.string, testCase.expectedAST);
+    });
+  });
+  completeTestCases.forEach((testCase, i) => {
+    it(testCase.string.trim(), () => {
+      runFileTest(testCase.string, testCase.expectedAST);
     });
   });
   
