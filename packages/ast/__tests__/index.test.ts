@@ -1,6 +1,6 @@
 
 import { ShaderProcessor } from "../src";
-import {BinaryOperation, FunctionCall, ConstructorCall} from '../src/index'
+import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier} from '../src/index'
 import util from 'util'
 // const string = `
   // a + (b + (c + d + f));
@@ -17,63 +17,110 @@ import util from 'util'
   // `
 
 const testCases = [
+  // {
+  //   string: `
+  //     a * b
+  //   `,
+  //   expectedAST: null
+  // },
   {
     string: `
     a * (b + c) + (d*f)
     `,
     expectedAST:   {
       op: { type: 'operator', data: '+'},
-      left: new BinaryOperation({
+      left: new BinaryExpression({
         op: { type: 'operator', data: '*'},
-        left: { type: 'ident', data: 'a'},
-        right: new BinaryOperation({
+        left: new Identifier('a'),
+        right: new BinaryExpression({
           op: { type: 'operator', data: '+'},
-          left: { type: 'ident', data: 'b'},
-          right: { type: 'ident', data: 'c'},
+          left: new Identifier('b'),
+          right: new Identifier('c'),
           parentheses: true
         })
       }),
-      right: new BinaryOperation({
+      right: new BinaryExpression({
         op: { type: 'operator', data: '*' },
-        left: { type: 'ident', data: 'd' },
-        right: { type: 'ident', data: 'f' },
+        left: new Identifier('d'),
+        right: new Identifier('f'),
         parentheses: true
       })
     }
   },
   {
     string: `
-      mix(2 * smoothstep(1, 2, a) + b, a + 2, vec2(1.))
+      mix(2 * fn(1, 2, a) + b, a + 2, vec2(1.))
     `,
     expectedAST: new FunctionCall(
       {data: 'mix'},
       [
-        new BinaryOperation({
+        new BinaryExpression({
           op: { type: 'operator', data: '+' },
-          left: new BinaryOperation({
+          left: new BinaryExpression({
             op: { type: 'operator', data: '*' },
-            left: { type: 'integer', data: '2' },
+            left: new Literal('2', 'integer'),
             right: new FunctionCall(
-              {data: 'smoothstep'},
+              {data: 'fn'},
               [
-                { type: 'integer', data: '1' },
-                { type: 'integer', data: '2' },
-                { type: 'ident', data: 'a' }
+                new Literal('1' , 'integer'),
+                new Literal('2' , 'integer'),
+                new Identifier('a')
               ])
            
           }),
-          right: { type: 'ident', data: 'b' }
+          right: new Identifier('b')
         }),
-        new BinaryOperation({
+        new BinaryExpression({
           op: { type: 'operator', data: '+' },
-          left: { type: 'ident', data: 'a' },
-          right: { type: 'integer', data: '2' }
-        }),
+          left: new Identifier('a'),
+          right: new Literal('2' , 'integer')}
+        ),
         new ConstructorCall(
           {data: 'vec2'},
-          [{ type: 'float', data: '1.' }]
+          [new Literal('1.', 'float')]
         )
       ]
+    )
+  },
+  {
+    string: `
+      vec2 b = c + mix(1,2,a)
+    `,
+    expectedAST: new VariableDeclaration(
+      {data: 'vec2'},
+      {data: 'b'},
+      new BinaryExpression({
+        op: { type: 'operator', data: '+' },
+        left: new Identifier('c'),
+        right: new FunctionCall(
+          {data: 'mix'},
+          [
+            new Literal('1', 'integer'),
+            new Literal('2', 'integer'),
+            new Identifier('a')
+          ])
+        }
+        )
+      )
+  },
+  {
+    string: `
+      b = fn(1, a)
+    `,
+    expectedAST: new AssignmentExpression(
+      {data: '='},
+      {data: 'b', type: 'ident'},
+      new FunctionCall({data: 'fn'}, [new Literal('1', 'integer'), new Identifier('a')])
+    )
+  },
+  {
+    string: `
+      b *= 1
+    `,
+    expectedAST: new CompoundAssignmentExpression(
+      {data: '*='},
+      {data: 'b', type: 'ident'},
+      new Literal('1', 'integer')
     )
   }
 ]
@@ -87,7 +134,7 @@ describe('Shader Processor', () => {
   const runTest = (string, expectedAST) => {
     
     const AST = ShaderProcessor.parse(string);
-    //console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
+    console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
     
     expect(AST).toEqual(expectedAST);

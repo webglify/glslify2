@@ -470,7 +470,7 @@ class Cursor2 {
     if(this.pos != 0){
       return this.indexQueue[this.pos - 1.];
     } else {
-      throw new Error('queue underflow')
+      return undefined
     }
   }  
   getPrev(count:number = 1){
@@ -541,6 +541,8 @@ export const ShaderProcessor = ({
       return {type, data}
     });
 
+    console.log('tokens', tokens)
+
     const indecies = tokens
     .map((token, i) => {
       return token.type !== 'whitespace' ? i : undefined
@@ -586,7 +588,7 @@ const obtainParenthesesScopeCursor = (tokens, cursor) => {
 
 
 
-export class BinaryOperation {
+export class BinaryExpression {
 
   op
   left
@@ -604,11 +606,11 @@ export class BinaryOperation {
   }
 
   static init (op, left, right) {
-    return new BinaryOperation({op, left, right})
+    return new BinaryExpression({op, left, right})
   }
 
   propagate(op, right) {
-    return new BinaryOperation({
+    return new BinaryExpression({
       op,
       left: this,
       right,
@@ -616,10 +618,10 @@ export class BinaryOperation {
   }
 
   propagateToRightNode(op, right) {
-    return new BinaryOperation({
+    return new BinaryExpression({
       op: this.op,
       left: this.left,
-      right: new BinaryOperation({
+      right: new BinaryExpression({
         op, 
         left: this.right,
         right
@@ -632,14 +634,15 @@ export class BinaryOperation {
 }
 
 
-const createBinaryOperation = (next, op, prev, bo) => {
+const createBinaryExpression = (next, op, prev, bo) => {
   // If there's no existing binary operation or the operation is not multiplication,
-  // we can directly create a new BinaryOperation.
-  if (!bo || op.data !== '*') {
-    return BinaryOperation.init(op, bo || prev, next);
+  // we can directly create a new BinaryExpression.
+  if (!(bo instanceof BinaryExpression) || op.data !== '*') {
+    return BinaryExpression.init(op, bo || prev, next);
   }
 
   // At this point, we have an existing binary operation (bo) and the operation is multiplication.
+
   return bo.parentheses 
   ? bo.propagate(op, next) 
   : bo.propagateToRightNode(op, next);
@@ -647,7 +650,7 @@ const createBinaryOperation = (next, op, prev, bo) => {
 
 
 
-const addBinaryOperation = (tokens, cursor, bo) => {
+const addBinaryExpression = (tokens, cursor, bo) => {
   
   const op = tokens[cursor.current]
   const prev = tokens[cursor.prev]
@@ -656,24 +659,29 @@ const addBinaryOperation = (tokens, cursor, bo) => {
   // right operand parenteses
   if(next.data === '(') {
     const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
-    const aggr = parseTokens(tokens, c1.forward(), null)
-    const nextBO =  new BinaryOperation({...aggr, parentheses: true})
+    const aggr = parseTokens(tokens, c1, null)
+    const nextBO =  new BinaryExpression({...aggr, parentheses: true})
 
-    const pb = createBinaryOperation(nextBO, op, prev, bo) 
+    const pb = createBinaryExpression(nextBO, op, prev, bo) 
 
     return [c2, pb]
   }
-  if(['builtin', 'keyword'].includes(next.type)){
-    const [_cursor, _aggr] = addFunctionCall(tokens, cursor.forward(), null)
+
+  if(isFunctionCallToken(tokens, cursor.clone().forward())){
+    const [_cursor, _aggr] = addFunctionCall(tokens, cursor.forward())
     
-    const pb = createBinaryOperation(_aggr, op, prev, bo) 
+    const pb = createBinaryExpression(_aggr, op, prev, bo) 
 
     return [_cursor, pb]
   }
 
-  const pb = createBinaryOperation(next, op, prev, bo) 
+  const pb = createBinaryExpression(
+    createLiteralOrIdent(next), 
+    op, 
+    prev, 
+    bo) 
 
-  return [cursor, pb]   
+  return [cursor.forward(), pb]   
 }
 
 
@@ -732,36 +740,147 @@ export class FunctionCall {
 }
 export class ConstructorCall extends FunctionCall{}
 
-const addFunctionCall = (tokens, cursor, stmt) => {
-
+const isFunctionCallToken = (tokens, cursor) => {
   const currentToken = tokens[cursor.current]
   const nextToken = tokens[cursor.next]
   
+  return ['builtin', 'keyword', 'ident'].includes(currentToken.type) 
+  && nextToken 
+  && nextToken.data === '('
+  
+}
+const addFunctionCall = (tokens, cursor) => {
+  
+  if(!isFunctionCallToken(tokens, cursor)){
+    throw new Error('not a function call token')
+  }
+  
   // function arguments
-  if(['builtin', 'keyword'].includes(currentToken.type) && nextToken.data === '(') {
-    const fc = currentToken.type === 'builtin' 
-    ? new FunctionCall(currentToken)
-    : new ConstructorCall(currentToken)
+  const currentToken = tokens[cursor.current]
+  
+    const fc = currentToken.type === 'keyword' 
+    ? new ConstructorCall(currentToken)
+    : new FunctionCall(currentToken)
+
     const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
     const argGroups = obtainFunctionArguments(tokens, c1)
     
     argGroups.forEach(argCursor => {
-      if(argCursor.length === 1) {
-        const arg = tokens[argCursor.current]
-        fc.addArgument(arg)
-      }else {
         const arg = parseTokens(tokens, argCursor, null)
         fc.addArgument(arg)
-      }
-      
-    })
+      })
 
     return [c2, fc]
-  }
-
-  return [cursor, stmt]
+  
 }
 
+export class VariableDeclaration {
+  dataType
+  identifier
+  initializer
+
+  constructor (dataType, identifier, initializer) {
+    this.dataType = dataType.data
+    this.identifier = identifier.data
+    this.initializer = initializer
+  }
+}
+
+const isVariableDeclarationToken = (tokens, cursor) => {
+  const currentToken = tokens[cursor.current]
+  const prevToken = tokens[cursor.prev]
+  const nextToken = tokens[cursor.next]
+
+  return currentToken.type === 'ident' 
+  && prevToken && prevToken.type === 'keyword'
+  && nextToken && nextToken.data === '='
+}
+
+const addVariableDeclaration = (tokens, cursor) => {
+  if(!isVariableDeclarationToken(tokens, cursor)){
+    throw new Error('token is not a variable declaration')
+  }
+
+  const dataType = tokens[cursor.prev]
+  const identifier = tokens[cursor.current]
+
+  
+
+  const initializer = parseTokens(tokens, cursor.forward(), null)
+  const vd = new VariableDeclaration(dataType, identifier, initializer)
+  return [cursor.toEnd(), vd]
+  
+}
+
+const assignmentOperators = ['=', '+=', '-=', '*=', '/=']
+
+const isAssignmentExpressionToken = (tokens, cursor) => {
+  const currentToken = tokens[cursor.current]
+  const nextToken = tokens[cursor.next]
+
+  return currentToken.type === 'ident' && nextToken && assignmentOperators.includes(nextToken.data)
+
+}
+
+export class AssignmentExpression {
+  operator
+  left
+  right
+
+  constructor (operator, left, right) {
+    this.operator = operator.data
+    this.left = left
+    this.right = right
+  }
+}
+
+export class CompoundAssignmentExpression extends AssignmentExpression {}
+
+const addAssignmentExpression = (tokens, cursor) => {
+  if(!isAssignmentExpressionToken(tokens, cursor)){
+    throw new Error('not a assignment expresson token')
+  }
+
+  const currentToken = tokens[cursor.current]
+  const nextToken = tokens[cursor.next]
+  const right = parseTokens(tokens, cursor.forward().forward(), null)
+
+  const stmt = nextToken.data === '='
+  ? new AssignmentExpression(nextToken, currentToken, right)
+  : new CompoundAssignmentExpression(nextToken, currentToken, right)
+  return [cursor.toEnd(), stmt]
+
+}
+
+export class Literal {
+  value
+  type
+  constructor(value, type){
+    this.value = value
+    this.type = type
+  }
+}
+export class Identifier {
+  name
+  constructor(name){
+    this.name = name
+  }
+}
+
+const createLiteralOrIdent = ({type, data}) => {
+
+  if(!['ident', 'integer', 'float'].includes(type)) {
+    throw new Error(`token is not Literal nor Identifier: ${type}, ${data}`)
+  }
+  return type === 'ident'
+  ? new Identifier(data)
+  : new Literal(data, type)
+}
+
+const addLiteralIdent = (tokens, cursor) => {
+ 
+  return [cursor, createLiteralOrIdent(tokens[cursor.current])]
+}
 
 const parseTokens = (tokens, cursor, stmt: any) => {
 
@@ -769,9 +888,21 @@ const parseTokens = (tokens, cursor, stmt: any) => {
 
     const currentToken = tokens[cursor.current]
 
+    console.log('currentToken', currentToken)
+
     
-    if(['builtin', 'keyword'].includes(currentToken.type)){
-      const [_cursor, _stmt] = addFunctionCall(tokens, cursor, stmt)
+    if(isFunctionCallToken(tokens, cursor)){
+      const [_cursor, _stmt] = addFunctionCall(tokens, cursor)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+
+    if(isVariableDeclarationToken(tokens, cursor)){
+      const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+
+    if(isAssignmentExpressionToken(tokens, cursor)){
+      const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor)
       return parseTokens(tokens, _cursor, _stmt)
     }
     
@@ -779,17 +910,24 @@ const parseTokens = (tokens, cursor, stmt: any) => {
     if(['('].includes(currentToken.data)) {
 
       const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward())
-      const aggr = parseTokens(tokens, c1.forward(), null)
-      const stmt = new BinaryOperation({...aggr, parentheses: true})      
+      const aggr = parseTokens(tokens, c1, null)
+      
+      const stmt = new BinaryExpression({...aggr, parentheses: true})      
       return parseTokens(tokens, c2, stmt)
 
     }
 
     if(['+', '-', '*', '/'].includes(currentToken.data)) {
-      const [_cursor, _stmt] = addBinaryOperation(tokens, cursor, stmt)
+      const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
       
       return parseTokens(tokens, _cursor.forward(), _stmt)
     }
+
+    if(['integer', 'ident', 'float'].includes(currentToken.type)){
+      const [_cursor, _stmt] = addLiteralIdent(tokens, cursor)
+      return parseTokens(tokens, _cursor.forward(), _stmt)
+    }
+
 
     return parseTokens(tokens, cursor.forward(), stmt)
 }
