@@ -1,6 +1,6 @@
 
-import { FunctionDeclaration, ShaderProcessor } from "../src";
-import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration} from '../src/index'
+import {Parser, Serializer} from "../src";
+import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration, FunctionDeclaration, Program} from '../src/parser'
 import util from 'util'
 // const string = `
   // a + (b + (c + d + f));
@@ -20,39 +20,39 @@ const locTestCases = [
   
   {
     string: `
-    a * (b + c) + (d*f)
+    a * (b + c) + (d * f)
     `,
-    expectedAST:   {
-      op: { type: 'operator', data: '+'},
+    shouldAST: new BinaryExpression({
+      operator:'+',
       left: new BinaryExpression({
-        op: { type: 'operator', data: '*'},
+        operator:'*',
         left: new Identifier('a'),
         right: new BinaryExpression({
-          op: { type: 'operator', data: '+'},
+          operator:'+',
           left: new Identifier('b'),
           right: new Identifier('c'),
           parentheses: true
         })
       }),
       right: new BinaryExpression({
-        op: { type: 'operator', data: '*' },
+        operator:'*',
         left: new Identifier('d'),
         right: new Identifier('f'),
         parentheses: true
       })
-    }
+    })
   },
   {
     string: `
       mix(2 * fn(1, 2, a) + b, a + 2, vec2(1.))
     `,
-    expectedAST: new FunctionCall(
+    shouldAST: new FunctionCall(
       {data: 'mix'},
       [
         new BinaryExpression({
-          op: { type: 'operator', data: '+' },
+          operator: '+',
           left: new BinaryExpression({
-            op: { type: 'operator', data: '*' },
+            operator: '*',
             left: new Literal('2', 'integer'),
             right: new FunctionCall(
               {data: 'fn'},
@@ -66,7 +66,7 @@ const locTestCases = [
           right: new Identifier('b')
         }),
         new BinaryExpression({
-          op: { type: 'operator', data: '+' },
+          operator: '+',
           left: new Identifier('a'),
           right: new Literal('2' , 'integer')}
         ),
@@ -79,13 +79,13 @@ const locTestCases = [
   },
   {
     string: `
-      vec2 b = c + mix(1,2,a)
+      vec2 b = c + mix(1, 2, a);
     `,
-    expectedAST: new VariableDeclaration(
+    shouldAST: new VariableDeclaration(
       {data: 'vec2'},
       {data: 'b'},
       new BinaryExpression({
-        op: { type: 'operator', data: '+' },
+        operator: '+',
         left: new Identifier('c'),
         right: new FunctionCall(
           {data: 'mix'},
@@ -100,21 +100,21 @@ const locTestCases = [
   },
   {
     string: `
-      b = fn(1, a)
+      b = fn(1, a);
     `,
-    expectedAST: new AssignmentExpression(
+    shouldAST: new AssignmentExpression(
       {data: '='},
-      {data: 'b', type: 'ident'},
+      new Identifier('b'),
       new FunctionCall({data: 'fn'}, [new Literal('1', 'integer'), new Identifier('a')])
     )
   },
   {
     string: `
-      b *= 1
+      b *= 1;
     `,
-    expectedAST: new CompoundAssignmentExpression(
+    shouldAST: new CompoundAssignmentExpression(
       {data: '*='},
-      {data: 'b', type: 'ident'},
+      new Identifier('b'),
       new Literal('1', 'integer')
     )
   },
@@ -124,12 +124,12 @@ const locTestCases = [
 const completeTestCases = [
   {
     string: `
-    vec2 fnName (float a, vec2 b) { 
-      vec2 d = a;
-      return d;
-    }
+vec2 fnName(float a, vec2 b) {
+  vec2 d = a;
+  return d;
+}
     `,
-    expectedAST: [new FunctionDeclaration(
+    shouldAST: new Program([new FunctionDeclaration(
       "fnName", 
       "vec2",
       [
@@ -143,7 +143,7 @@ const completeTestCases = [
         new Identifier('a')
       ),
       new ReturnStatement(new Identifier('d'))
-    ])]
+    ])])
   }
 ]
 
@@ -153,23 +153,34 @@ describe('Shader Processor', () => {
   
 
   // A helper function to run the common logic
-  const runFileTest = (string, expectedAST) => {
+  const runProgramTest = (string, shouldAST) => {
     
-    const AST = ShaderProcessor.tokenize(string).parseFile();
+    const AST = Parser.tokenize(string).parseProgramm();
     console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
     
-    expect(AST).toEqual(expectedAST);
+    expect(AST).toEqual(shouldAST);
 
   };
 
-  const runLocTest = (string, expectedAST) => {
+  const runLocTest = (string, shouldAST) => {
     
-    const AST = ShaderProcessor.tokenize(string).parseTokens();
+    const AST = Parser.tokenize(string).parseTokens();
     console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
     
-    expect(AST).toEqual(expectedAST);
+    expect(AST).toEqual(shouldAST);
+
+  };
+
+  const runSerializeTest = (shouldString, shouldAST) => {
+    console.log('shouldAST', util.inspect(shouldAST, {showHidden: false, depth: null, colors: false}))
+
+    const string = Serializer(shouldAST)
+    console.log('string', string)
+
+    
+    expect(string).toEqual(shouldString.trim());
 
   };
 
@@ -178,12 +189,18 @@ describe('Shader Processor', () => {
 
   locTestCases.forEach((testCase, i) => {
     it(testCase.string.trim(), () => {
-      runLocTest(testCase.string, testCase.expectedAST);
+      runLocTest(testCase.string, testCase.shouldAST);
     });
   });
   completeTestCases.forEach((testCase, i) => {
     it(testCase.string.trim(), () => {
-      runFileTest(testCase.string, testCase.expectedAST);
+      runProgramTest(testCase.string, testCase.shouldAST);
+    });
+  });
+
+  locTestCases.forEach((testCase, i) => {
+    it(testCase.string.trim(), () => {
+      runSerializeTest(testCase.string, testCase.shouldAST);
     });
   });
   

@@ -1,5 +1,5 @@
 {
-  "name": "@webglify/ast",
+  "name": "@webglify/glslaster",
   "version": "0.0.1",
   "description": "Core Logic for GLSL modularization",
   "main": "lib/index.js",
