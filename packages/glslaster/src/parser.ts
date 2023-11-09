@@ -1,14 +1,5 @@
 import tokenize from 'glsl-tokenizer/string'
-import {Token} from './grammar'
 
-
-const tokensEqual = (tokenA, tokenB) => {
-  return tokenA && tokenB 
-  && tokenA[0] === tokenB[0]
-  && tokenA[1] === tokenB[1]
-}
-
-const s = (token?: Token): [string, string] => token && ([token.type, token.data]) || undefined
 
 class Cursor {
   public indexQueue: number[]
@@ -26,9 +17,7 @@ class Cursor {
   get next() {
     if(!this.eof){
       return this.indexQueue[this.pos + 1.];
-    } else {
-      throw new Error('queue overflow')
-    }
+    } 
   }
 
   get length () {
@@ -38,9 +27,7 @@ class Cursor {
   get prev(){
     if(this.pos != 0){
       return this.indexQueue[this.pos - 1.];
-    } else {
-      return undefined
-    }
+    } 
   }  
   getPrev(count:number = 1){
     if(this.pos - count >= 0){
@@ -63,6 +50,8 @@ class Cursor {
       throw new Error('queue forward overflow')
     }
   }
+
+ 
 
   backward(){
     if(!this.atStart()){
@@ -120,10 +109,11 @@ export default ({
     return this
   },
   
-  parseProgramm(){
-    return parseProgramm(this.tokens, this.cursor, new Program())
+  parseProgram(){
+    return parseProgram(this.tokens, this.cursor, new Program())
   },
   parseTokens(){
+    console.log('tokens', this.tokens)
     return parseTokens(this.tokens, this.cursor, null)
   }
 
@@ -160,7 +150,9 @@ export class ParameterDeclaration {
 }
 
 const createParameterDeclaration = (tokens, cursor) => {
+  
   const ct = tokens[cursor.current]
+  
   const args = []
   if(['in', 'out'].includes(ct.data)) {
     args.push(ct.data)
@@ -209,7 +201,7 @@ const getFuncParameters = (tokens, cursor): false | [c: Cursor, any]  => {
     
   }
 
-  const pCursors = obtainParamsCursors()
+  const pCursors = obtainParamsCursors().filter(c => c.length>0)
   const parameters = pCursors.map(pCursor => createParameterDeclaration(tokens, pCursor))
 
   return [cursor, parameters]
@@ -293,7 +285,7 @@ const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor, any]  => {
 
 }
 
-const parseProgramm = (tokens, cursor, p: Program) => {
+const parseProgram = (tokens, cursor, p: Program) => {
 
   if(cursor.eof) return p
 
@@ -301,11 +293,11 @@ const parseProgramm = (tokens, cursor, p: Program) => {
   if(f) {
     const [_cursor, stmt] = f
     p.addNode(stmt)
-    return parseProgramm(tokens, _cursor, p)
+    return parseProgram(tokens, _cursor, p)
   }
 
 
-  return parseProgramm(tokens, cursor.forward(), p)
+  return parseProgram(tokens, cursor.forward(), p)
 
 
 
@@ -338,31 +330,30 @@ const parseBody = (tokens, cursor) => {
   const locsC = obtainScope(cursor)
 
   const stmts = locsC.map(locCursor => parseTokens(tokens, locCursor, null))
-  console.log('stmts', locsC)
+  
 
   return stmts
   
 
 }
 
-const obtainParenthesesScopeCursor = (tokens, cursor) => {
+const obtainParenthesesScopeCursor = (tokens, cursor, p = [['('],[')']]) => {
   const obtainScope = (cursor2, depth = 0): [Cursor, Cursor] => {
-    cursor2.forward()
     const currentToken = tokens[cursor2.current]
-    if (currentToken.data == ')'){
+    if (currentToken.data == p[1]){
       if(depth === 0) {
         
         const split = cursor2.split(cursor.pos)
         return split
       }
-      else return obtainScope(cursor2, depth - 1)
+      else return obtainScope(cursor2.forward(), depth - 1)
     }
 
-    if (currentToken.data == '('){
-      return obtainScope(cursor2, depth + 1)
+    if (currentToken.data == p[0]){
+      return obtainScope(cursor2.forward(), depth + 1)
     }
 
-    return obtainScope(cursor2, depth)    
+    return obtainScope(cursor2.forward(), depth)    
   }
 
   return obtainScope(cursor.clone())
@@ -411,9 +402,6 @@ export class BinaryExpression {
       }),
     })
   }
-
-
-
 }
 
 
@@ -427,8 +415,8 @@ const createBinaryExpression = (next, op, prev, bo) => {
   // At this point, we have an existing binary operation (bo) and the operation is multiplication.
 
   return bo.parentheses 
-  ? bo.propagate(op, next) 
-  : bo.propagateToRightNode(op, next);
+  ? bo.propagate(op.data, next) 
+  : bo.propagateToRightNode(op.data, next);
 };
 
 
@@ -442,8 +430,12 @@ const addBinaryExpression = (tokens, cursor, bo) => {
   // right operand parenteses
   if(next.data === '(') {
     const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+    
     const aggr = parseTokens(tokens, c1, null)
-    const nextBO =  new BinaryExpression({...aggr, parentheses: true})
+    const nextBO = aggr instanceof BinaryExpression
+    ? new BinaryExpression({...aggr, parentheses: true})
+    : aggr
+    
 
     const pb = createBinaryExpression(nextBO, op, prev, bo) 
 
@@ -458,13 +450,22 @@ const addBinaryExpression = (tokens, cursor, bo) => {
     return [_cursor, pb]
   }
 
+  const me = getMemberExpression(tokens, cursor.clone().forward())
+  if(me){
+    const [_cursor, _aggr] = me
+    
+    const pb = createBinaryExpression(_aggr, op, prev, bo) 
+
+    return [_cursor, pb]
+  }
+
   const pb = createBinaryExpression(
     createLiteralOrIdent(next), 
     op, 
     prev, 
     bo) 
 
-  return [cursor.forward(), pb]   
+  return [cursor.forward().forward(), pb]   
 }
 
 
@@ -595,11 +596,12 @@ const addVariableDeclaration = (tokens, cursor) => {
 
 const assignmentOperators = ['=', '+=', '-=', '*=', '/=']
 
-const isAssignmentExpressionToken = (tokens, cursor) => {
-  const currentToken = tokens[cursor.current]
-  const nextToken = tokens[cursor.next]
+const isAssignmentExpressionToken = (tokens, cursor, aggs) => {
+  const ct = tokens[cursor.current]
 
-  return currentToken.type === 'ident' && nextToken && assignmentOperators.includes(nextToken.data)
+  const b = (aggs instanceof MemberExpression || aggs instanceof Identifier) && ct && assignmentOperators.includes(ct.data)
+
+  return b
 
 }
 
@@ -617,20 +619,19 @@ export class AssignmentExpression {
 
 export class CompoundAssignmentExpression extends AssignmentExpression {}
 
-const addAssignmentExpression = (tokens, cursor) => {
-  if(!isAssignmentExpressionToken(tokens, cursor)){
+const addAssignmentExpression = (tokens, cursor, aggs) => {
+  if(!isAssignmentExpressionToken(tokens, cursor, aggs)){
     throw new Error('not a assignment expresson token')
   }
 
-  const currentToken = tokens[cursor.current]
-  const nextToken = tokens[cursor.next]
-  const left = new Identifier(currentToken.data)
-  const right = parseTokens(tokens, cursor.forward().forward(), null)
+  const ct = tokens[cursor.current]
+  const left = aggs
+  const right = parseTokens(tokens, cursor.forward(), null)
 
 
-  const stmt = nextToken.data === '='
-  ? new AssignmentExpression(nextToken, left, right)
-  : new CompoundAssignmentExpression(nextToken, left, right)
+  const stmt = ct.data === '='
+  ? new AssignmentExpression(ct, left, right)
+  : new CompoundAssignmentExpression(ct, left, right)
   return [cursor.toEnd(), stmt]
 
 }
@@ -661,14 +662,15 @@ const createLiteralOrIdent = ({type, data}) => {
 }
 
 const addLiteralIdent = (tokens, cursor) => {
- 
-  return [cursor, createLiteralOrIdent(tokens[cursor.current])]
+  const a = createLiteralOrIdent(tokens[cursor.current]);
+  return [cursor.forward(), a]
 }
 
 
 const isReturnToken = (tokens, cursor) => {
   
-  return tokensEqual(s(tokens[cursor.current]), ['keyword', 'return'])
+  const ct = tokens[cursor.current]
+  return ct.type === 'keyword' && ct.data === 'return'
   
 }
 
@@ -682,6 +684,50 @@ export class ReturnStatement {
 const addReturnStatement = (tokens, cursor) => {
   const stmt = parseTokens(tokens, cursor.forward(), null)
   return [cursor.toEnd(), new ReturnStatement(stmt)]
+}
+
+export class MemberExpression {
+  object: Identifier
+  property: Identifier | Literal
+  computed: boolean
+
+  constructor(object, property, computed) {
+    this.object = object
+    this.property = property
+    this.computed = computed
+  }
+
+}
+const getMemberExpression = (tokens, cursor): false | [Cursor, MemberExpression] => {
+  const ct = tokens[cursor.current]
+  if(ct.type !== 'ident') return  false
+  
+  const nt = tokens[cursor.next]
+  if(!nt || !['.', '['].includes(nt.data)) return false
+
+  const c2 = cursor.clone().forward().forward()
+  const c2t = tokens[c2.current]
+  if(!c2t || !['ident','integer', 'float'].includes(c2t.type)) return  false
+
+  // computed false
+  if(nt.data === '.') return [
+    c2.forward(), 
+    new MemberExpression(
+      new Identifier(ct.data),
+      new Identifier(c2t.data),
+      false)
+  ]
+  
+  // computed true
+  const [pc1, pc2] = obtainParenthesesScopeCursor(tokens, c2, [['['], [']']])
+  const property = parseTokens(tokens, pc1, null)
+  return [
+    pc2.forward(), 
+    new MemberExpression(
+      new Identifier(ct.data),
+      property,
+      true)
+  ]
 }
 
 const parseTokens = (tokens, cursor, stmt: any) => {
@@ -700,14 +746,20 @@ const parseTokens = (tokens, cursor, stmt: any) => {
       return parseTokens(tokens, _cursor, _stmt)
     }
 
-    if(isVariableDeclarationToken(tokens, cursor)){
-      const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
-      console.log('_stmt', _stmt, _cursor)
+    const me = getMemberExpression(tokens, cursor)
+
+    if(me) {
+      const [_cursor, _stmt] = me
       return parseTokens(tokens, _cursor, _stmt)
     }
 
-    if(isAssignmentExpressionToken(tokens, cursor)){
-      const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor)
+    if(isVariableDeclarationToken(tokens, cursor)){
+      const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+
+    if(isAssignmentExpressionToken(tokens, cursor, stmt)){
+      const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor, stmt)
       return parseTokens(tokens, _cursor, _stmt)
     }
     
@@ -724,13 +776,12 @@ const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(['+', '-', '*', '/'].includes(currentToken.data)) {
       const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
-      
-      return parseTokens(tokens, _cursor.forward(), _stmt)
+      return parseTokens(tokens, _cursor, _stmt)
     }
 
     if(['integer', 'ident', 'float'].includes(currentToken.type)){
       const [_cursor, _stmt] = addLiteralIdent(tokens, cursor)
-      return parseTokens(tokens, _cursor.forward(), _stmt)
+      return parseTokens(tokens, _cursor, _stmt)
     }
 
 

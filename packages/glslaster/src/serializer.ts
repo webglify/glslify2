@@ -1,4 +1,18 @@
-import {BinaryExpression, Program, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration, FunctionDeclaration,} from '../src/parser'
+import {
+  BinaryExpression, 
+  Program, 
+  FunctionCall, 
+  ConstructorCall, 
+  VariableDeclaration, 
+  AssignmentExpression, 
+  CompoundAssignmentExpression, 
+  Literal, 
+  Identifier, 
+  ReturnStatement, 
+  ParameterDeclaration, 
+  FunctionDeclaration,
+  MemberExpression
+} from '../src/parser'
 
 
 const generateGLSL = (ast) => {
@@ -34,6 +48,9 @@ const generateGLSL = (ast) => {
       const right = generateGLSL(ast.right);
       const p = ast.parentheses ? ['(', ')']: ['','']
       return `${p[0]}${left} ${ast.operator} ${right}${p[1]}`;
+    case MemberExpression:
+      if(!ast.computed) return `${generateGLSL(ast.object)}.${generateGLSL(ast.property)}`
+      else return `${generateGLSL(ast.object)}[${generateGLSL(ast.property)}]`
     case Identifier:
       return ast.name;
     case Literal:
