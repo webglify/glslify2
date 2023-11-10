@@ -110,12 +110,11 @@ export default ({
   },
   
   parseProgram(){
-    console.log('tokens', this.tokens)
 
     return parseProgram(this.tokens, this.cursor, new Program())
   },
   parseTokens(){
-    console.log('tokens', this.tokens)
+
     return parseTokens(this.tokens, this.cursor, null)
   }
 
@@ -486,30 +485,38 @@ const createBinaryExpression = (next, op, prev, bo) => {
 
 
 
-const addBinaryExpression = (tokens, cursor, bo) => {
+const getNegativSigned = (tokens, cursor) : false | [Cursor, Literal|Identifier] => {
 
-  const prev = tokens[cursor.prev]
-  const op = tokens[cursor.current]
+  const ct = tokens[cursor.current]
+  if(ct.data !== '-') return false
+
+  const prev = tokens[cursor.prev]  
   const next = tokens[cursor.next]
   
-  // forward a single negative sign case, like -1, -b
-  if(op.data === '-' 
-  
-  && ((!prev || !['integer', 'float', 'ident'].includes(prev.type)))
+
+  if(((!prev || !['integer', 'float', 'ident'].includes(prev.type)))
   && ['integer', 'float', 'ident'].includes(next.type)
   
   ) {
     if(!prev  || (prev && prev.data !== ')')) {
       
-      const t = {...next, data: `${op.data}${next.data}`}
-      console.log('- op', op, prev, next, t)
+      const t = {...next, data: `${ct.data}${next.data}`}
+      //console.log('- op', ct, prev, next, t)
       
       return [cursor.forward().forward(), createLiteralOrIdent(t)]
     }
     
   }
-  
-  
+
+  return false;
+}
+
+
+const addBinaryExpression = (tokens, cursor, bo) => {
+
+  const prev = tokens[cursor.prev]
+  const op = tokens[cursor.current]
+  const next = tokens[cursor.next]
   
   
   
@@ -543,6 +550,17 @@ const addBinaryExpression = (tokens, cursor, bo) => {
     const pb = createBinaryExpression(_aggr, op, prev, bo) 
 
     return [_cursor, pb]
+  }
+
+  const r = getNegativSigned(tokens, cursor.clone().forward())
+  if(r) {
+    const [_cursor, _next] = r
+    const npb = createBinaryExpression(
+      _next, 
+      op, 
+      prev, 
+      bo) 
+      return [_cursor, npb]   
   }
 
   const pb = createBinaryExpression(
@@ -934,7 +952,6 @@ const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, Q
 
   
   const storageQualifier = tokens[c2.current].data
-  console.log('storageQualifier', storageQualifier)
   c2.forward()
   
   
@@ -1039,6 +1056,12 @@ const parseTokens = (tokens, cursor, stmt: any) => {
       : aggr
       return parseTokens(tokens, c2, stmt)
 
+    }
+
+    const ns = getNegativSigned(tokens, cursor)
+    if(ns) {
+      const [_cursor, _stmt] = ns
+      return parseTokens(tokens, _cursor, _stmt)
     }
 
     if(['+', '-', '*', '/'].includes(currentToken.data)) {

@@ -182,12 +182,16 @@ const locTestCases = [
   },
   {
     string: `  
-    gl_Position = vec4(-1.);    
+    gl_Position = vec4(-1.) * -b;    
     `,
     shouldAST: new AssignmentExpression(
       '=',
       new Identifier('gl_Position'),
-      new ConstructorCall({data: 'vec4'}, [new Literal('-1.', 'float')])
+      new BinaryExpression({
+        left: new ConstructorCall({data: 'vec4'}, [new Literal('-1.', 'float')]),
+        right: new Identifier('-b'),
+        operator: '*'
+      })
     )
 
   }
@@ -297,22 +301,22 @@ describe('Parser and Serializer', () => {
 
   // Iterate over each test case
 
-  // locTestCases.forEach((testCase, i) => {
-  //   it(testCase.string.trim(), () => {
-  //     runLocTest(testCase.string, testCase.shouldAST);
-  //   });
-  // });
+  locTestCases.forEach((testCase, i) => {
+    it(testCase.string.trim(), () => {
+      //runLocTest(testCase.string, testCase.shouldAST);
+    });
+  });
   // completeTestCases.forEach((testCase, i) => {
   //   it(testCase.string.trim(), () => {
   //     runProgramTest(testCase.string, testCase.shouldAST);
   //   });
   // });
 
-  [...locTestCases, ...completeTestCases].forEach((testCase, i) => {
-    it(testCase.string.trim(), () => {
-      //runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
-    });
-  });
+  // [...locTestCases, ...completeTestCases].forEach((testCase, i) => {
+  //   it(testCase.string.trim(), () => {
+  //     runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
+  //   });
+  // });
 
 
   
