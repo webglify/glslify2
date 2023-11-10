@@ -14,7 +14,8 @@ import {
   MemberExpression,
   LayoutQualifier,
   QualifiedVariableDeclaration,
-  Parameter
+  Parameter,
+  PrecisionQualifierDeclaration
 } from '../src/parser'
 
 
@@ -42,6 +43,8 @@ const generateGLSL = (ast) => {
       const pQualifier = ast.precisionQualifier? `${ast.precisionQualifier} ` : ``
       const _initializer = ast.initializer ? ` = ${generateGLSL(ast.initializer)}` : ``
       return `${qualifier}${ast.storageQualifier} ${pQualifier}${ast.dataType} ${ast.name}${_initializer};`;
+    case PrecisionQualifierDeclaration:
+      return `precision ${ast.precisionQualifier} ${ast.dataType};`
     case ConstructorCall:
     case FunctionCall:
       const args = ast.args.map(arg => generateGLSL(arg)).join(', ');

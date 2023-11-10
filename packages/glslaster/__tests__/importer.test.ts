@@ -8,12 +8,12 @@ describe('Importer', () => {
   it('should import', () => {
 
 
-    // const code = fixtureGlsl.test
-    // console.log('fixtureGlsl',code)
-    // const AST = Parser.tokenize(code).parseProgram()
+    const code = fixtureGlsl.glsl
+    console.log('fixtureGlsl',code)
+    const AST = Parser.tokenize(code).parseProgram()
     
-    // console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
-    // console.log('serialized:', Serializer(AST))
+    console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
+    console.log('serialized:', Serializer(AST))
 
   })
 

@@ -292,10 +292,21 @@ const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor, any]  => {
 
 }
 
+type ParseResult = false | [Cursor, any]
+
+const addToProgram = (tokens, p: Program, pr: ParseResult) => {
+  if(pr) {
+    const [_cursor, _stmt] = pr
+    p.addNode(_stmt)
+    return parseProgram(tokens, _cursor, p)
+  }
+}
+
 const parseProgram = (tokens, cursor, p: Program) => {
 
   if(cursor.eof) return p
 
+  
   const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
   if(vld){
       const [_cursor, _stmt] = vld
@@ -311,7 +322,9 @@ const parseProgram = (tokens, cursor, p: Program) => {
 
     return parseProgram(tokens, _cursor, p)
 }
-  
+    const pd = getPrecisionQualifier(tokens, cursor)
+    if(pd) return addToProgram(tokens, p, pd)
+
 
   const f = getFunctionDeclaration(tokens, cursor)
   if(f) {
@@ -327,6 +340,34 @@ const parseProgram = (tokens, cursor, p: Program) => {
 
 }
 
+export class PrecisionQualifierDeclaration {
+  precisionQualifier
+  dataType
+  constructor(precisionQualifier, dataType) {
+    this.precisionQualifier = precisionQualifier
+    this.dataType = dataType
+  }
+}
+
+const precicionKeyowrds = ['mediump', 'highp', 'lowp']
+
+
+const getPrecisionQualifier = (tokens, cursor): false | [Cursor, PrecisionQualifierDeclaration] => {
+  const ct = tokens[cursor.current]
+  if(ct.data !== 'precision' && ct.type !== 'keyword') return false
+  
+  const c2 = cursor.clone().forward()
+  const c2t = tokens[c2.current]
+  if(c2t.type !== 'keyword' || !precicionKeyowrds.includes(c2t.data)) return false
+
+  c2.forward()
+  const c3t = tokens[c2.current]
+  if(c3t.type !== 'keyword') return false
+  
+  return [c2.forward(), new PrecisionQualifierDeclaration(c2t.data, c3t.data)]
+
+
+}
 
 
 const parseBody = (tokens, cursor) => {
@@ -446,10 +487,31 @@ const createBinaryExpression = (next, op, prev, bo) => {
 
 
 const addBinaryExpression = (tokens, cursor, bo) => {
-  
-  const op = tokens[cursor.current]
+
   const prev = tokens[cursor.prev]
+  const op = tokens[cursor.current]
   const next = tokens[cursor.next]
+  
+  // forward a single negative sign case, like -1, -b
+  if(op.data === '-' 
+  
+  && ((!prev || !['integer', 'float', 'ident'].includes(prev.type)))
+  && ['integer', 'float', 'ident'].includes(next.type)
+  
+  ) {
+    if(!prev  || (prev && prev.data !== ')')) {
+      
+      const t = {...next, data: `${op.data}${next.data}`}
+      console.log('- op', op, prev, next, t)
+      
+      return [cursor.forward().forward(), createLiteralOrIdent(t)]
+    }
+    
+  }
+  
+  
+  
+  
   
   // right operand parenteses
   if(next.data === '(') {
@@ -625,7 +687,9 @@ const assignmentOperators = ['=', '+=', '-=', '*=', '/=']
 const isAssignmentExpressionToken = (tokens, cursor, aggs) => {
   const ct = tokens[cursor.current]
 
-  const b = (aggs instanceof MemberExpression || aggs instanceof Identifier) && ct && assignmentOperators.includes(ct.data)
+  const b = (
+    aggs instanceof MemberExpression || 
+    aggs instanceof Identifier) && ct && assignmentOperators.includes(ct.data)
 
   return b
 
@@ -679,12 +743,15 @@ export class Identifier {
 
 const createLiteralOrIdent = ({type, data}) => {
 
-  if(!['ident', 'integer', 'float'].includes(type)) {
+  if(!['ident', 'integer', 'float', 'builtin'].includes(type)) {
     throw new Error(`token is not Literal nor Identifier: ${type}, ${data}`)
   }
-  return type === 'ident'
+  
+  const a = ['ident','builtin'].includes(type)
   ? new Identifier(data)
   : new Literal(data, type)
+
+  return a
 }
 
 const addLiteralIdent = (tokens, cursor) => {
@@ -856,6 +923,7 @@ const getExpression = (tokens, cursor): false | [Cursor, any]=> {
   
 
 }
+
 const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, QualifiedVariableDeclaration] => {
   const c2 = cursor.clone()
 
@@ -875,7 +943,7 @@ const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, Q
   if(!c2t || c2t.type !== 'keyword') return false
 
   let precisionQualifier
-  if(['mediump', 'highp', 'lowp'].includes(c2t.data)) {
+  if(precicionKeyowrds.includes(c2t.data)) {
     precisionQualifier = c2t.data
     c2.forward()
     const nt2 = tokens[c2.current]
@@ -953,10 +1021,12 @@ const parseTokens = (tokens, cursor, stmt: any) => {
 
   
     
-    if(isAssignmentExpressionToken(tokens, cursor, stmt)){
-      const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor, stmt)
-      return parseTokens(tokens, _cursor, _stmt)
-    }
+  if(isAssignmentExpressionToken(tokens, cursor, stmt)){
+    const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor, stmt)
+    return parseTokens(tokens, _cursor, _stmt)
+  }
+ 
+  
     
     // left operand parenteses
     if(['('].includes(currentToken.data)) {
@@ -976,7 +1046,7 @@ const parseTokens = (tokens, cursor, stmt: any) => {
       return parseTokens(tokens, _cursor, _stmt)
     }
 
-    if(['integer', 'ident', 'float'].includes(currentToken.type)){
+    if(['integer', 'float','ident', 'builtin'].includes(currentToken.type)){
       const [_cursor, _stmt] = addLiteralIdent(tokens, cursor)
       return parseTokens(tokens, _cursor, _stmt)
     }
