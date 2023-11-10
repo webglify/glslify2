@@ -11,7 +11,10 @@ import {
   ReturnStatement, 
   ParameterDeclaration, 
   FunctionDeclaration,
-  MemberExpression
+  MemberExpression,
+  LayoutQualifier,
+  QualifiedVariableDeclaration,
+  Parameter
 } from '../src/parser'
 
 
@@ -34,6 +37,9 @@ const generateGLSL = (ast) => {
     case VariableDeclaration:
       const initializer = generateGLSL(ast.initializer);
       return `${ast.dataType} ${ast.name} = ${initializer};`;
+    case QualifiedVariableDeclaration:
+      const qualifier = generateGLSL(ast.qualifier)
+      return `${qualifier} ${ast.storageQualifier} ${ast.dataType} ${ast.name};`;
     case ConstructorCall:
     case FunctionCall:
       const args = ast.args.map(arg => generateGLSL(arg)).join(', ');
@@ -51,6 +57,10 @@ const generateGLSL = (ast) => {
     case MemberExpression:
       if(!ast.computed) return `${generateGLSL(ast.object)}.${generateGLSL(ast.property)}`
       else return `${generateGLSL(ast.object)}[${generateGLSL(ast.property)}]`
+    case LayoutQualifier:
+      return `layout(${generateGLSL(ast.parameter)})`
+    case Parameter:
+      return `${ast.name}${ast.value ? `=${ast.value}`:``}`
     case Identifier:
       return ast.name;
     case Literal:
@@ -62,5 +72,6 @@ const generateGLSL = (ast) => {
       return '';
   }
 }
+
 
 export default generateGLSL

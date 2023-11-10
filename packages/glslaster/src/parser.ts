@@ -11,7 +11,7 @@ class Cursor {
   }
 
   get eof() {
-    return this.pos == (this.indexQueue.length)
+    return this.pos >= (this.indexQueue.length)
   }
 
   get next() {
@@ -64,7 +64,7 @@ class Cursor {
   }
 
   toEnd(){
-    this.pos = this.indexQueue.length - 1;
+    this.pos = this.indexQueue.length;
     return this;
   }
 
@@ -149,8 +149,7 @@ export class ParameterDeclaration {
   }
 }
 
-const createParameterDeclaration = (tokens, cursor) => {
-  
+const obtainVariableDeclarationArgs = (tokens, cursor) => {
   const ct = tokens[cursor.current]
   
   const args = []
@@ -164,6 +163,12 @@ const createParameterDeclaration = (tokens, cursor) => {
   cursor.forward()
   const ct3 = tokens[cursor.current]
   args.splice(1, 0, ct3.data)
+
+  return [args, cursor.forward()]
+}
+const createParameterDeclaration = (tokens, cursor) => {
+  
+  const [args] = obtainVariableDeclarationArgs(tokens, cursor)
 
   return new ParameterDeclaration(args[0], args[1], args[2])
 }
@@ -288,6 +293,14 @@ const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor, any]  => {
 const parseProgram = (tokens, cursor, p: Program) => {
 
   if(cursor.eof) return p
+
+  const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
+  if(vld){
+      const [_cursor, _stmt] = vld
+      p.addNode(_stmt)
+
+      return parseProgram(tokens, _cursor, p)
+  }
 
   const f = getFunctionDeclaration(tokens, cursor)
   if(f) {
@@ -574,7 +587,9 @@ const isVariableDeclarationToken = (tokens, cursor) => {
   const currentToken = tokens[cursor.current]
   const prevToken = tokens[cursor.prev]
   const nextToken = tokens[cursor.next]
-
+  
+  
+  
   return currentToken.type === 'ident' 
   && prevToken && prevToken.type === 'keyword'
   && nextToken && nextToken.data === '='
@@ -611,7 +626,7 @@ export class AssignmentExpression {
   right
 
   constructor (operator, left, right) {
-    this.operator = operator.data
+    this.operator = operator
     this.left = left
     this.right = right
   }
@@ -630,8 +645,8 @@ const addAssignmentExpression = (tokens, cursor, aggs) => {
 
 
   const stmt = ct.data === '='
-  ? new AssignmentExpression(ct, left, right)
-  : new CompoundAssignmentExpression(ct, left, right)
+  ? new AssignmentExpression(ct.data, left, right)
+  : new CompoundAssignmentExpression(ct.data, left, right)
   return [cursor.toEnd(), stmt]
 
 }
@@ -730,11 +745,82 @@ const getMemberExpression = (tokens, cursor): false | [Cursor, MemberExpression]
   ]
 }
 
+
+export class LayoutQualifier {
+  parameter
+  constructor (parameter) {
+    this.parameter = parameter
+  }
+}
+export class QualifiedVariableDeclaration {
+  qualifier
+  dataType
+  name
+  storageQualifier
+  
+  constructor(qualifier, dataType, name, storageQualifier) {
+    this.qualifier = qualifier
+    this.name = name
+    this.dataType = dataType
+    this.storageQualifier = storageQualifier 
+  }
+}
+
+export class Parameter {
+  name
+  value?
+  constructor(name, value?) {
+    this.name = name
+    if(value){
+      this.value = value
+    }
+  }
+}
+
+const createParameter = (tokens, cursor) => {
+  const ct = tokens[cursor.current]
+  const name = ct.data
+  const nt = tokens[cursor.next]
+  if(!nt || nt.data !== '=') return new Parameter(name)
+
+  const ct2 = cursor.forward().forward()
+  
+
+  const value = tokens[ct2.current].data
+  
+  return new Parameter(name, value)
+}
+
+const getVariableDeclarationWithLayoutToken = (tokens, cursor) : false | [Cursor, QualifiedVariableDeclaration] => {
+
+  const ct = tokens[cursor.current]
+
+  if(ct.data !== 'layout') return false
+
+  
+  const nt = tokens[cursor.next]
+  
+  if(!nt || nt.data !== '(') return false
+
+
+  const c2 = cursor.clone().forward().forward()
+  const [ct1, ct2] = obtainParenthesesScopeCursor(tokens, c2)
+
+  const parameter = createParameter(tokens, ct1)
+
+  const [[dataType, name, storageQualifier], cr] = obtainVariableDeclarationArgs(tokens, ct2.forward())
+  
+
+  return [cr, new QualifiedVariableDeclaration(new LayoutQualifier(parameter), dataType, name, storageQualifier)]
+}
+
 const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(cursor.eof) return stmt
 
     const currentToken = tokens[cursor.current]
+
+    
 
     if(isReturnToken(tokens, cursor)) {
       const [_cursor, _stmt] = addReturnStatement(tokens, cursor)
@@ -754,10 +840,14 @@ const parseTokens = (tokens, cursor, stmt: any) => {
     }
 
     if(isVariableDeclarationToken(tokens, cursor)){
-      const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
-      return parseTokens(tokens, _cursor, _stmt)
+        const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
+        return parseTokens(tokens, _cursor, _stmt)
     }
 
+    
+
+  
+    
     if(isAssignmentExpressionToken(tokens, cursor, stmt)){
       const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor, stmt)
       return parseTokens(tokens, _cursor, _stmt)
@@ -768,8 +858,10 @@ const parseTokens = (tokens, cursor, stmt: any) => {
 
       const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward())
       const aggr = parseTokens(tokens, c1, null)
-      
-      const stmt = new BinaryExpression({...aggr, parentheses: true})      
+
+      const stmt = aggr instanceof BinaryExpression 
+      ? new BinaryExpression({...aggr, parentheses: true})      
+      : aggr
       return parseTokens(tokens, c2, stmt)
 
     }
