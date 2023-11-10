@@ -187,19 +187,40 @@ const locTestCases = [
 const completeTestCases = [
   {
     string: `
-    layout(location=0) in vec2 aPosition;
+layout(location=0) in vec2 aPosition;
+out vec2 glyphUV;
+uniform mediump float uRowCount;
+const float leftPadding = 0.;
 vec2 fnName(float a, vec2 b) {
   vec2 d = a;
   return d;
 }
     `,
     shouldAST: new Program([
-      new QualifiedVariableDeclaration(
-        new LayoutQualifier(new Parameter('location', '0')
-        ),
+      new QualifiedVariableDeclaration(        
         'vec2',
         'aPosition',
-        'in'
+        'in',
+        {qualifier: new LayoutQualifier(new Parameter('location', '0'))}
+      ),
+      new QualifiedVariableDeclaration(        
+        'vec2',
+        'glyphUV',
+        'out',
+      ),
+      new QualifiedVariableDeclaration(        
+        'float',
+        'uRowCount',
+        'uniform',
+        {precisionQualifier: 'mediump'}
+      ),
+      new QualifiedVariableDeclaration(
+        'float',
+        'leftPadding',
+        'const',
+        {
+          initializer: new Literal('0.', 'float')
+        }
       ),
       new FunctionDeclaration(
       "fnName", 

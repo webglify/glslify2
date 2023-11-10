@@ -38,8 +38,10 @@ const generateGLSL = (ast) => {
       const initializer = generateGLSL(ast.initializer);
       return `${ast.dataType} ${ast.name} = ${initializer};`;
     case QualifiedVariableDeclaration:
-      const qualifier = generateGLSL(ast.qualifier)
-      return `${qualifier} ${ast.storageQualifier} ${ast.dataType} ${ast.name};`;
+      const qualifier = ast.qualifier ? `${generateGLSL(ast.qualifier)} ` : ``
+      const pQualifier = ast.precisionQualifier? `${ast.precisionQualifier} ` : ``
+      const _initializer = ast.initializer ? ` = ${generateGLSL(ast.initializer)}` : ``
+      return `${qualifier}${ast.storageQualifier} ${pQualifier}${ast.dataType} ${ast.name}${_initializer};`;
     case ConstructorCall:
     case FunctionCall:
       const args = ast.args.map(arg => generateGLSL(arg)).join(', ');

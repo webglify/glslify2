@@ -110,6 +110,8 @@ export default ({
   },
   
   parseProgram(){
+    console.log('tokens', this.tokens)
+
     return parseProgram(this.tokens, this.cursor, new Program())
   },
   parseTokens(){
@@ -301,6 +303,15 @@ const parseProgram = (tokens, cursor, p: Program) => {
 
       return parseProgram(tokens, _cursor, p)
   }
+
+  const vd = getVariableDeclaration(tokens, cursor)
+  if(vd){
+    const [_cursor, _stmt] = vd
+    p.addNode(_stmt)
+
+    return parseProgram(tokens, _cursor, p)
+}
+  
 
   const f = getFunctionDeclaration(tokens, cursor)
   if(f) {
@@ -753,16 +764,29 @@ export class LayoutQualifier {
   }
 }
 export class QualifiedVariableDeclaration {
-  qualifier
+  qualifier?
+  
   dataType
   name
   storageQualifier
-  
-  constructor(qualifier, dataType, name, storageQualifier) {
-    this.qualifier = qualifier
+  precisionQualifier
+  initializer
+
+  constructor(dataType, name, storageQualifier, options?) {
     this.name = name
     this.dataType = dataType
     this.storageQualifier = storageQualifier 
+    if(options?.qualifier) {
+      this.qualifier = options.qualifier
+    }
+    if(options?.precisionQualifier) {
+      this.precisionQualifier = options.precisionQualifier
+    }
+    if(options?.initializer) {
+      this.initializer = options.initializer
+    }
+
+
   }
 }
 
@@ -807,11 +831,92 @@ const getVariableDeclarationWithLayoutToken = (tokens, cursor) : false | [Cursor
   const [ct1, ct2] = obtainParenthesesScopeCursor(tokens, c2)
 
   const parameter = createParameter(tokens, ct1)
+  const layout = new LayoutQualifier(parameter)
+  return getVariableDeclaration(tokens, ct2.forward(), layout)
 
-  const [[dataType, name, storageQualifier], cr] = obtainVariableDeclarationArgs(tokens, ct2.forward())
+}
+
+const moveToToken = (tokens,cursor, token): false | Cursor => {
+  if(cursor.eof) return false
+  const ct = tokens[cursor.current]
+  if(ct.type == token.type && ct.data == token.data) return cursor
+  else return moveToToken(tokens, cursor.forward(), token)
+}
+
+const getExpression = (tokens, cursor): false | [Cursor, any]=> {
+  const rc2 = moveToToken(tokens, cursor.clone(), {data: ';', type: 'operator'})
+  
+  if(!rc2) return false
+
+  const [rc2a, rc2b] = rc2.split(cursor.pos)
+  const stmt = parseTokens(tokens, rc2a, null)
   
 
-  return [cr, new QualifiedVariableDeclaration(new LayoutQualifier(parameter), dataType, name, storageQualifier)]
+  return [rc2b, stmt]
+  
+
+}
+const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, QualifiedVariableDeclaration] => {
+  const c2 = cursor.clone()
+
+  const ct = tokens[c2.current]
+
+
+  if(ct.type !== 'keyword' || !['in', 'out', 'uniform', 'const'].includes(ct.data)) return false
+
+  
+  const storageQualifier = tokens[c2.current].data
+  console.log('storageQualifier', storageQualifier)
+  c2.forward()
+  
+  
+  const c2t = tokens[c2.current]
+  
+  if(!c2t || c2t.type !== 'keyword') return false
+
+  let precisionQualifier
+  if(['mediump', 'highp', 'lowp'].includes(c2t.data)) {
+    precisionQualifier = c2t.data
+    c2.forward()
+    const nt2 = tokens[c2.current]
+    if(!nt2 || nt2.type !== 'keyword') return false
+  }
+  
+  const dataType = tokens[c2.current].data
+
+  c2.forward()
+  const c3t = tokens[c2.current]
+  if(c3t.type !== 'ident') return false
+
+  const name = c3t.data
+  
+  c2.forward()
+  const c4t = tokens[c2.current]
+  
+  let initializer
+  let cursorToReturn = c2
+
+  
+  if(c4t.data === '=') {
+    
+    const expr = getExpression(tokens, c2.forward())
+
+    if(expr) {
+      cursorToReturn = expr[0]
+      initializer = expr[1]
+    }
+
+    
+  }
+
+  
+  return [cursorToReturn, new QualifiedVariableDeclaration(dataType, name, storageQualifier, {
+    qualifier,
+    precisionQualifier,
+    initializer
+  }
+  )]
+
 }
 
 const parseTokens = (tokens, cursor, stmt: any) => {
