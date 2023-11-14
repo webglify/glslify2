@@ -90,8 +90,9 @@ class Cursor {
 export default ({
   tokens: [],
   cursor: null,
+  version: '300 es',
   tokenize(glslCode: string, inlcudePositionData = false){
-    this.tokens = tokenize(glslCode, {version: '300 es'}).map((token) => {
+    this.tokens = tokenize(glslCode, {version: this.version}).map((token) => {
       if(inlcudePositionData) return token
       const {type, data} = token
       return {type, data}
@@ -111,7 +112,11 @@ export default ({
   
   parseProgram(){
 
-    return parseProgram(this.tokens, this.cursor, new Program())
+    const program = new Program()
+    program.version = this.version
+
+    
+    return parseProgram(this.tokens, this.cursor, program)
   },
   parseTokens(){
 
@@ -121,17 +126,30 @@ export default ({
 })
 
 export class Program {
-  body
-  nodes
+  version
+  body = []
 
   constructor(body?){
-    
-    this.body = body ?? []
-    
+    if(body){
+      this.body = body
+    }
   }
 
-  addNode(node){
-    this.body.push(node)
+ 
+  removeNode(index) {
+    this.body.splice(index, 1)
+  }
+
+  addNode(node, index?){
+    const start = index || this.body.length
+    this.body.splice(start, 0, node)
+  }
+
+  clone(){
+    const p = new Program()
+    p.version = this.version
+    this.body.forEach(d => p.addNode(d))
+    return p
   }
 
 }
@@ -305,6 +323,13 @@ const parseProgram = (tokens, cursor, p: Program) => {
 
   if(cursor.eof) return p
 
+  const pi = getPragmaImportDeclaration(tokens, cursor)
+  if(pi) {
+    const [_cursor, stmt] = pi
+    p.addNode(stmt)
+    return parseProgram(tokens, _cursor, p)
+  }
+
   
   const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
   if(vld){
@@ -332,11 +357,41 @@ const parseProgram = (tokens, cursor, p: Program) => {
     return parseProgram(tokens, _cursor, p)
   }
 
+  
 
   return parseProgram(tokens, cursor.forward(), p)
+}
+
+export class ImportDeclaration {
+  functionNames
+  src
+  constructor(functionNames, src){
+    this.functionNames = functionNames
+    this.src = src
+  }
+ }
 
 
 
+const getPragmaImportDeclaration = (tokens, cursor): false | [Cursor, ImportDeclaration] => {
+
+  const ct = tokens[cursor.current]
+  
+  if(ct.type !== 'preprocessor') return false
+
+  const importBlock = ct.data.match(/#pragma\:?\s?import\s+(.*)/)
+
+  if(!importBlock || importBlock.length<2) return false
+  
+  const funcSrcPaar = importBlock[1].match(/\{(.*)\}\s+from\s+(.*)/)
+  
+  if(!funcSrcPaar && funcSrcPaar.length < 3) return false
+
+  const functionNames = funcSrcPaar[1].split(',').map(f => f.trim())
+  const src = funcSrcPaar[2];
+  
+  
+  return [cursor.forward(), new ImportDeclaration(functionNames, src)]
 }
 
 export class PrecisionQualifierDeclaration {
@@ -396,9 +451,8 @@ const parseBody = (tokens, cursor) => {
   const stmts = locsC.map(locCursor => parseTokens(tokens, locCursor, null))
   
 
-  return stmts
-  
 
+  return stmts
 }
 
 const obtainParenthesesScopeCursor = (tokens, cursor, p = [['('],[')']]) => {

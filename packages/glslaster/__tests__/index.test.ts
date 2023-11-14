@@ -200,9 +200,56 @@ const locTestCases = [
 
 ]
 
+const prog = new Program([
+  new PrecisionQualifierDeclaration(
+    'mediump',
+    'float'
+  ),
+  new QualifiedVariableDeclaration(        
+    'vec2',
+    'aPosition',
+    'in',
+    {qualifier: new LayoutQualifier(new Parameter('location', '0'))}
+  ),
+  new QualifiedVariableDeclaration(        
+    'vec2',
+    'glyphUV',
+    'out',
+  ),
+  new QualifiedVariableDeclaration(        
+    'float',
+    'uRowCount',
+    'uniform',
+    {precisionQualifier: 'mediump'}
+  ),
+  new QualifiedVariableDeclaration(
+    'float',
+    'leftPadding',
+    'const',
+    {
+      initializer: new Literal('0.', 'float')
+    }
+  ),
+  new FunctionDeclaration(
+  "fnName", 
+  "vec2",
+  [
+    new ParameterDeclaration("float", "a"),
+    new ParameterDeclaration("vec2", "b"),
+  ],
+  [
+  new VariableDeclaration(
+    {data: 'vec2'},
+    {data: 'd'},
+    new Identifier('a')
+  ),
+  new ReturnStatement(new Identifier('d'))
+])])
+prog.version = '300 es'
 const completeTestCases = [
   {
     string: `
+#version 300 es
 precision mediump float;
 layout(location=0) in vec2 aPosition;
 out vec2 glyphUV;
@@ -213,51 +260,7 @@ vec2 fnName(float a, vec2 b) {
   return d;
 }
     `,
-    shouldAST: new Program([
-      new PrecisionQualifierDeclaration(
-        'mediump',
-        'float'
-      ),
-      new QualifiedVariableDeclaration(        
-        'vec2',
-        'aPosition',
-        'in',
-        {qualifier: new LayoutQualifier(new Parameter('location', '0'))}
-      ),
-      new QualifiedVariableDeclaration(        
-        'vec2',
-        'glyphUV',
-        'out',
-      ),
-      new QualifiedVariableDeclaration(        
-        'float',
-        'uRowCount',
-        'uniform',
-        {precisionQualifier: 'mediump'}
-      ),
-      new QualifiedVariableDeclaration(
-        'float',
-        'leftPadding',
-        'const',
-        {
-          initializer: new Literal('0.', 'float')
-        }
-      ),
-      new FunctionDeclaration(
-      "fnName", 
-      "vec2",
-      [
-        new ParameterDeclaration("float", "a"),
-        new ParameterDeclaration("vec2", "b"),
-      ],
-      [
-      new VariableDeclaration(
-        {data: 'vec2'},
-        {data: 'd'},
-        new Identifier('a')
-      ),
-      new ReturnStatement(new Identifier('d'))
-    ])])
+    shouldAST: prog
   }
 ]
 
@@ -268,7 +271,7 @@ describe('Parser and Serializer', () => {
 
   // A helper function to run the common logic
   const runProgramTest = (string, shouldAST) => {
-    
+    Parser.version = '300 es'
     const AST = Parser.tokenize(string).parseProgram();
     console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
@@ -303,20 +306,20 @@ describe('Parser and Serializer', () => {
 
   locTestCases.forEach((testCase, i) => {
     it(testCase.string.trim(), () => {
-      //runLocTest(testCase.string, testCase.shouldAST);
+      runLocTest(testCase.string, testCase.shouldAST);
     });
   });
-  // completeTestCases.forEach((testCase, i) => {
-  //   it(testCase.string.trim(), () => {
-  //     runProgramTest(testCase.string, testCase.shouldAST);
-  //   });
-  // });
+  completeTestCases.forEach((testCase, i) => {
+    it(testCase.string.trim(), () => {
+      runProgramTest(testCase.string, testCase.shouldAST);
+    });
+  });
 
-  // [...locTestCases, ...completeTestCases].forEach((testCase, i) => {
-  //   it(testCase.string.trim(), () => {
-  //     runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
-  //   });
-  // });
+  [...locTestCases, ...completeTestCases].forEach((testCase, i) => {
+    it(testCase.string.trim(), () => {
+      runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
+    });
+  });
 
 
   

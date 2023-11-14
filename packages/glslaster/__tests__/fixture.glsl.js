@@ -1,49 +1,46 @@
 module.exports = {
-  test: `#version 300 es
+  src: `#version 300 es
 
-
-
-vec2 getGlyphPosition () {
+  layout(location=0) in vec2 aPosition;
   
-  vec4 gb = aGlyphBounds;
+  vec2 getGlyphPosition () {
+
+    vec2 pos = aPosition;
+    
+    return pos * 2.;
+  }
+
+vec2 getGlyphPosition2 () {
 
   vec2 pos = aPosition;
   
-  pos.x += leftPadding;
-  
-  float height = gb.w + gb.y;
-  float width = gb.z - gb.x;
-    
-  pos.y += ((gb.w - gb.y) * .5 - .5);
-  
-  pos.x += width * .5 - .5;
-  
-  pos *= 2.;
-  
-  pos.y -= height * .5;
-  
-  pos.x -= width * .5;
-  
-  pos.y -= uDescender;
-  
-  
-  pos.x += gb.x;
-  pos.x -= 2. * aGlyphShift;
-  
-  vec2 fontScale = uFontSize / (uResolutionInPx);
+  return pos * 10.;
+}
 
-  pos.y += uPaddingBottom  / (uResolutionInPx.y);
-  
-  pos *= fontScale;
+vec2 getGlyphUV () {
 
-  pos.y += aRow.y/uResolutionInPx.y;
-  
-  return pos;
-
+  return vec2(0.);
 }
 
 `, 
+dst: `
+#version 300 es
 
+layout(location=0) in vec2 aPosition;
+
+#pragma: import { getGlyphPosition, getGlyphPosition2 } from './src.glsl'
+#pragma: import { getGlyphUV } from './src.glsl'
+
+void main () {
+
+  vec2 pos = aPosition;
+  pos += getGlyphPosition()
+
+  return pos * 2.;
+}
+
+
+`,
 
 glsl: `#version 300 es
 
@@ -82,7 +79,7 @@ uniform mediump float uRowCount;
 
 const float leftPadding = 0.;
 
-vec2 getGlyphPosition () {
+vec2 getGlyphPosition() {
   
   vec4 gb = aGlyphBounds;
 
@@ -109,51 +106,49 @@ vec2 getGlyphPosition () {
   pos.x += gb.x;
   pos.x -= 2. * aGlyphShift;
   
-  vec2 fontScale = uFontSize / (uResolutionInPx);
+  vec2 fontScale = uFontSize / uResolutionInPx;
 
-  pos.y += uPaddingBottom  / (uResolutionInPx.y);
+  pos.y += uPaddingBottom / uResolutionInPx.y;
   
   pos *= fontScale;
 
-  pos.y += aRow.y/uResolutionInPx.y;
+  pos.y += aRow.y / uResolutionInPx.y;
   
   return pos;
 }
 
-vec2 getGlyphUV () {
-    vec4 gb = aGlyphBounds;
+vec2 getGlyphUV() {
+  vec4 gb = aGlyphBounds;
 
   vec2 pos = aPosition;
   
   
-  vec2 itemSize = (uSdfItemSize * 2.)/ uSDFTextureSize ;
+  vec2 itemSize = (uSdfItemSize * 2.) / uSDFTextureSize;
   
-  float c = floor(aGlyphIndex/4.);
+  float c = floor(aGlyphIndex / 4.);
   float column = mod(c, uAtlasColumnCount) * itemSize.x;
-  float row = floor(c/uAtlasColumnCount) * itemSize.y;
+  float row = floor(c / uAtlasColumnCount) * itemSize.y;
 
 
   float u = mix(column, column + itemSize.x, pos.x);
   float v = mix(row, row + itemSize.y, pos.y);
 
-  vec2 uv = vec2(u,v);
+  vec2 uv = vec2(u, v);
   return uv;
 }
 
 
-#pragma glslify2: topDot = require('./glyph.position.vertex.glsl)
 
 
-void main(){
+void main() {
 
 
   vec2 pos = getGlyphPosition();
 
-  //pos.x += pos.y * uProgress;
 
   
   
-  gl_Position = vec4(mix(vec2(-1.), vec2(1.), pos), 0.,1.);
+  gl_Position = vec4(mix(vec2(-1.), vec2(1.), pos), 0., 1.);
 
   glyphUV = getGlyphUV();
   vChannel = mod(aGlyphIndex, 4.);

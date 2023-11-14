@@ -24,7 +24,8 @@ const generateGLSL = (ast) => {
 
   switch (ast.constructor) {
     case Program:
-      return ast.body.map(generateGLSL).join('\n');
+      console.log('ast', ast)
+      return `#version ${ast.version}\n${ast.body.map(generateGLSL).join('\n')}`;
     case 'VersionDirective':
       return `#version ${ast.version}`;
     case 'LayoutQualifier':
