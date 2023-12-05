@@ -8,7 +8,8 @@ import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, As
   PrecisionQualifierDeclaration,
   IfStatement,
   ElseIfStatement,
-  BlockStatement
+  BlockStatement,
+  LogicalExpression
 } from '../src/parser'
 import util from 'util'
 // const string = `
@@ -56,7 +57,7 @@ const locTestCases = [
       mix(2 * fn(1, 2, a) - b, a + 2, vec2(1.))
     `,
     shouldAST: new FunctionCall(
-      {data: 'mix'},
+      'mix',
       [
         new BinaryExpression({
           operator: '-',
@@ -64,7 +65,7 @@ const locTestCases = [
             operator: '*',
             left: new Literal('2', 'integer'),
             right: new FunctionCall(
-              {data: 'fn'},
+              'fn',
               [
                 new Literal('1' , 'integer'),
                 new Literal('2' , 'integer'),
@@ -80,7 +81,7 @@ const locTestCases = [
           right: new Literal('2' , 'integer')}
         ),
         new ConstructorCall(
-          {data: 'vec2'},
+          'vec2',
           [new Literal('1.', 'float')]
         )
       ]
@@ -97,7 +98,7 @@ const locTestCases = [
         operator: '+',
         left: new Identifier('c'),
         right: new FunctionCall(
-          {data: 'mix'},
+          'mix',
           [
             new Literal('1', 'integer'),
             new Literal('2', 'integer'),
@@ -114,7 +115,7 @@ const locTestCases = [
     shouldAST: new AssignmentExpression(      
       '=',
       new Identifier('b'),
-      new FunctionCall({data: 'fn'}, [new Literal('1', 'integer'), new Identifier('a')])
+      new FunctionCall('fn', [new Literal('1', 'integer'), new Identifier('a')])
     )
   },
   {
@@ -191,7 +192,7 @@ const locTestCases = [
       '=',
       new Identifier('gl_Position'),
       new BinaryExpression({
-        left: new ConstructorCall({data: 'vec4'}, [new Literal('-1.', 'float')]),
+        left: new ConstructorCall('vec4', [new Literal('-1.', 'float')]),
         right: new Identifier('-b'),
         operator: '*'
       })
@@ -219,7 +220,20 @@ if(t >= 0.) {
     )
 
   },
-
+  {
+    string: `
+ (a.y || b && abs(e)) && s
+`, shouldAST: new LogicalExpression('&&', 
+      new LogicalExpression(
+          '||', 
+          new MemberExpression(new Identifier('a'), new Identifier('y'), false), 
+          new LogicalExpression('&&', new Identifier('b'), new FunctionCall('abs', [new Identifier('e')])),
+          true
+        ),
+      new Identifier('s')
+      
+      )
+  }
 
 
 

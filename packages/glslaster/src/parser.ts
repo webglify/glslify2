@@ -51,6 +51,10 @@ class Cursor {
     }
   }
 
+  moveTo(index) {
+    this.pos = this.indexQueue.findIndex((i) => i === index)
+  }
+
   backward(){
     if(!this.atStart()){
       this.pos -= 1.;
@@ -670,9 +674,12 @@ export class FunctionCall {
   name
   args
   
-  constructor (token, args = []) {
-    this.name = token.data
-    this.args = args
+  constructor (name, args?) {
+    this.name = name
+    
+    this.args = args || []
+    
+    
   }
 
   addArgument(arg) {
@@ -690,7 +697,7 @@ const isFunctionCallToken = (tokens, cursor) => {
   && nextToken.data === '('
   
 }
-const addFunctionCall = (tokens, cursor) => {
+const addFunctionCall = (tokens, cursor): [Cursor, FunctionCall|ConstructorCall] => {
   
   if(!isFunctionCallToken(tokens, cursor)){
     throw new Error('not a function call token')
@@ -700,8 +707,8 @@ const addFunctionCall = (tokens, cursor) => {
   const currentToken = tokens[cursor.current]
   
     const fc = currentToken.type === 'keyword' 
-    ? new ConstructorCall(currentToken)
-    : new FunctionCall(currentToken)
+    ? new ConstructorCall(currentToken.data)
+    : new FunctionCall(currentToken.data)
 
     const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
     const argGroups = obtainFunctionArguments(tokens, c1)
@@ -753,7 +760,7 @@ const addVariableDeclaration = (tokens, cursor) => {
   
 }
 
-const assignmentOperators = ['=', '+=', '-=', '*=', '/=']
+const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>=']
 
 const isAssignmentExpressionToken = (tokens, cursor, aggs) => {
   const ct = tokens[cursor.current]
@@ -834,7 +841,7 @@ const addLiteralIdent = (tokens, cursor) => {
 const isReturnToken = (tokens, cursor) => {
   
   const ct = tokens[cursor.current]
-  return ct.type === 'keyword' && ct.data === 'return'
+  return ct && ct.type === 'keyword' && ct.data === 'return'
   
 }
 
@@ -1088,7 +1095,7 @@ const getIfStatement = (tokens, cursor, elseif: boolean = false): false | [Curso
 
   const ct = tokens[cursor.current]
   
-  if(ct.type !== 'keyword' || ct.data !== 'if') return false
+  if(!ct || ct.type !== 'keyword' || ct.data !== 'if') return false
   
   
   const nt = tokens[cursor.next]
@@ -1149,9 +1156,101 @@ const getIfStatement = (tokens, cursor, elseif: boolean = false): false | [Curso
   }
   
   return [b2.forward(), STMT]
-  
 
 } 
+
+export class LogicalExpression {
+  operator
+  left
+  right
+  parentheses: boolean
+
+  constructor (operator, left, right, parentheses?){
+    this.operator = operator
+    this.left = left
+    this.right = right
+    if(parentheses){
+      this.parentheses = parentheses
+    }
+
+
+
+    // check and fix higher precedence 
+    if(operator == '&&') {
+        
+        if(right.constructor === LogicalExpression && right.operator == '||' && !right.parentheses){
+          this.operator = '||'
+          this.left = new LogicalExpression('&&', left, right.left)
+          this.right = right.right
+        }
+      
+        else if(left.constructor === LogicalExpression && left.operator == '||' && !left.parentheses){
+          this.operator = '||'
+          this.left = left.left
+          this.right = new LogicalExpression('&&', left.right, right)
+        }
+    }
+
+    
+  }
+}
+
+const addLogicalExpression = (tokens, cursor, stmt: any) => {
+
+  const ct = tokens[cursor.current]
+  if(!['||', '&&'].includes(ct.data)) {
+    throw new Error(`not a logical operator ${JSON.stringify(ct)}`)
+  }
+
+  const nt = tokens[cursor.next]
+
+  // right operand (binary expresson)
+  if(['('].includes(nt.data)) {
+
+    const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+    const right = parseTokens(tokens, c1, null)
+    if([BinaryExpression, LogicalExpression].includes(right.constructor)) {
+      right.parentheses = true
+    }
+    const expr = new LogicalExpression(ct.data, stmt, right)
+    return [c2, expr]  
+  
+  }
+  if(isFunctionCallToken(tokens, cursor.clone().forward())){
+    const [_cursor, right] = addFunctionCall(tokens, cursor.forward())
+    // track global cursor pos
+    cursor.moveTo(_cursor.current)
+    const expr = new LogicalExpression(ct.data, stmt, right)
+    
+    return [_cursor, expr]
+  }
+
+  const me = getMemberExpression(tokens, cursor.clone().forward())
+  if(me){
+    const [_cursor, right] = me
+    
+
+    
+    const expr = new LogicalExpression(ct.data, stmt, right)
+
+    return [_cursor, expr]
+  }
+
+  const r = getNegativSigned(tokens, cursor.clone().forward())
+  if(r) {
+    const [_cursor, right] = r
+    const expr = new LogicalExpression(ct.data, stmt, right)
+    return [_cursor, expr]   
+  }
+
+
+  const right = parseTokens(tokens, cursor.forward(), null)
+  const expr = new LogicalExpression(ct.data, stmt, right)
+
+  return [cursor, expr]
+
+} 
+
 
 const parseTokens = (tokens, cursor, stmt: any) => {
 
@@ -1203,12 +1302,12 @@ const parseTokens = (tokens, cursor, stmt: any) => {
     if(['('].includes(currentToken.data)) {
 
       const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward())
-      const aggr = parseTokens(tokens, c1, null)
-
-      const stmt = aggr instanceof BinaryExpression 
-      ? new BinaryExpression({...aggr, parentheses: true})      
-      : aggr
-      return parseTokens(tokens, c2, stmt)
+      const aggr = parseTokens(tokens, c1, stmt)
+      console.log('left operand', c2, tokens[11], aggr)
+      if([BinaryExpression, LogicalExpression].includes(aggr.constructor)) {
+        aggr.parentheses = true      
+      } 
+      return parseTokens(tokens, c2, aggr)
 
     }
 
@@ -1226,6 +1325,13 @@ const parseTokens = (tokens, cursor, stmt: any) => {
     // relational operators 
     if(['==', '!=', '<', '>', '>=', '<='].includes(currentToken.data)) {
       const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+
+    // logical operators 
+    if(['||', '&&'].includes(currentToken.data)) {
+      const [_cursor, _stmt] = addLogicalExpression(tokens, cursor, stmt)
+      console.log('addLogicalExpression', _cursor, _stmt)
       return parseTokens(tokens, _cursor, _stmt)
     }
 

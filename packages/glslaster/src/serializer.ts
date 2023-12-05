@@ -18,7 +18,8 @@ import {
   LayoutQualifier,
   QualifiedVariableDeclaration,
   Parameter,
-  PrecisionQualifierDeclaration
+  PrecisionQualifierDeclaration,
+  LogicalExpression
 } from '../src/parser'
 
 
@@ -40,8 +41,9 @@ const generateGLSL = (ast) => {
 
       return `{\n ${ast.map(s => generateGLSL(s))}\n}`
 
-    case 'LayoutQualifier':
-      return `layout(location=${ast.location}) ${ast.qualifier} ${ast.dataType} ${ast.name};`;
+    case LogicalExpression:
+      let expr = `${generateGLSL(ast.left)} ${ast.operator} ${generateGLSL(ast.right)}`
+      return ast.parentheses ? `(${expr})` : expr
     case FunctionDeclaration:
       const params = ast.parameters.map(param => `${param.dataType} ${param.name}`).join(', ');
       const body = ast.body.map(generateGLSL).join('\n  ');
