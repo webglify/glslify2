@@ -6,6 +6,9 @@ import {
   VariableDeclaration, 
   AssignmentExpression, 
   CompoundAssignmentExpression, 
+  IfStatement,
+  ElseIfStatement,
+  BlockStatement,
   Literal, 
   Identifier, 
   ReturnStatement, 
@@ -26,8 +29,17 @@ const generateGLSL = (ast) => {
     case Program:
       console.log('ast', ast)
       return `#version ${ast.version}\n${ast.body.map(generateGLSL).join('\n')}`;
-    case 'VersionDirective':
-      return `#version ${ast.version}`;
+    case IfStatement:
+    case ElseIfStatement:
+      const {test, consequent, alternate} = ast
+      const start = `if(${generateGLSL(test)}) ${generateGLSL(consequent)}`
+      const prefix = alternate && `else ` || ''
+      
+      return `${start} ${prefix}${generateGLSL(alternate)}`
+    case BlockStatement: 
+
+      return `{\n ${ast.map(s => generateGLSL(s))}\n}`
+
     case 'LayoutQualifier':
       return `layout(location=${ast.location}) ${ast.qualifier} ${ast.dataType} ${ast.name};`;
     case FunctionDeclaration:

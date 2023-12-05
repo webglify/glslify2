@@ -5,7 +5,10 @@ import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, As
   LayoutQualifier,
   QualifiedVariableDeclaration,
   Parameter,
-  PrecisionQualifierDeclaration
+  PrecisionQualifierDeclaration,
+  IfStatement,
+  ElseIfStatement,
+  BlockStatement
 } from '../src/parser'
 import util from 'util'
 // const string = `
@@ -194,7 +197,29 @@ const locTestCases = [
       })
     )
 
-  }
+  },
+  {
+    string: `
+if(t >= 0.) {
+ b = 1.;
+} else if(t == 1.) {
+ b = 2.;
+} else {
+ c = 1.;
+}
+    `,
+    shouldAST: new IfStatement(
+      new BinaryExpression({operator: '>=', left: new Identifier('t'), right: new Literal('0.', 'float')}),
+      BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('1.', 'float'))]),
+      new ElseIfStatement(
+        new BinaryExpression({operator: '==', left: new Identifier('t'), right: new Literal('1.', 'float')}),
+        BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('2.', 'float'))]),
+        BlockStatement.from([new AssignmentExpression('=', new Identifier('c'), new Literal('1.', 'float'))])
+      )
+    )
+
+  },
+
 
 
 

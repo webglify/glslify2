@@ -51,8 +51,6 @@ class Cursor {
     }
   }
 
- 
-
   backward(){
     if(!this.atStart()){
       this.pos -= 1.;
@@ -456,6 +454,7 @@ const parseBody = (tokens, cursor) => {
 }
 
 const obtainParenthesesScopeCursor = (tokens, cursor, p = [['('],[')']]) => {
+  
   const obtainScope = (cursor2, depth = 0): [Cursor, Cursor] => {
     const currentToken = tokens[cursor2.current]
     if (currentToken.data == p[1]){
@@ -1058,13 +1057,113 @@ const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, Q
 
 }
 
+export class BlockStatement extends Array {
+  
+}
+
+export class IfStatement  {
+
+  test: BinaryExpression
+  consequent: BlockStatement
+  alternate: Alternate
+
+  constructor(test, consequent, alternate?) {
+    this.test = test
+    this.consequent = consequent    
+    if(alternate){
+      this.alternate = alternate
+    }
+  }
+
+  setAlternate(alternate: Alternate) {
+    this.alternate = alternate
+  }
+}
+
+export class ElseIfStatement extends IfStatement {}
+
+type Alternate = IfStatement | BlockStatement | ElseIfStatement
+
+const getIfStatement = (tokens, cursor, elseif: boolean = false): false | [Cursor, IfStatement] =>  {
+
+  const ct = tokens[cursor.current]
+  
+  if(ct.type !== 'keyword' || ct.data !== 'if') return false
+  
+  
+  const nt = tokens[cursor.next]
+  if(nt.data != '(') return false
+
+  const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+
+  
+  const test = parseTokens(tokens, c1, null)
+
+  const bt = tokens[c2.next]
+  if(bt.type !== 'operator' && bt.data !== '{') {
+    throw new Error('syntax error, if statments need a block {')
+  }
+
+  const [b1, b2] = obtainParenthesesScopeCursor(tokens, c2.forward().forward(), [['{'], ['}']])
+  const consequent = parseBody(tokens, b1)
+  
+
+  const STMT = elseif 
+  ? new ElseIfStatement(test, BlockStatement.from(consequent))
+  : new IfStatement(test, BlockStatement.from(consequent))
+
+  const nit = tokens[b2.next]
+  
+  if(nit && nit.type == 'keyword' && nit.data == 'else') {
+
+    b2.forward()
+    const nt = tokens[b2.next]
+    
+
+    if(nt.type === 'keyword' && nt.data === 'if') {
+      // follow up 'else if' statement
+      const res = getIfStatement(tokens, b2.forward(), true)
+      if(res) {
+      
+        const [cursor2, alternate] = res
+        STMT.setAlternate(alternate)
+        return [cursor2.forward(), STMT]
+     
+      }
+    }
+    else {
+      // close else
+      if(nt.type !== 'operator' && nt.data !== '{') {
+        throw new Error('syntax error, if statments need a block {')
+      }
+      const [a1, a2] = obtainParenthesesScopeCursor(tokens, b2.forward().forward(), [['{'], ['}']])
+
+
+      const alternate = parseBody(tokens, a1)
+      STMT.setAlternate(alternate)
+
+      return [a2.forward(), STMT]
+    }
+
+    
+  }
+  
+  return [b2.forward(), STMT]
+  
+
+} 
+
 const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(cursor.eof) return stmt
 
     const currentToken = tokens[cursor.current]
 
-    
+    const ifStatment = getIfStatement(tokens, cursor);
+    if(ifStatment) {
+      const [_cursor, _stmt] = ifStatment
+      return parseTokens(tokens, _cursor, _stmt)
+    }
 
     if(isReturnToken(tokens, cursor)) {
       const [_cursor, _stmt] = addReturnStatement(tokens, cursor)
@@ -1076,8 +1175,9 @@ const parseTokens = (tokens, cursor, stmt: any) => {
       return parseTokens(tokens, _cursor, _stmt)
     }
 
-    const me = getMemberExpression(tokens, cursor)
 
+
+    const me = getMemberExpression(tokens, cursor)
     if(me) {
       const [_cursor, _stmt] = me
       return parseTokens(tokens, _cursor, _stmt)
@@ -1118,7 +1218,13 @@ const parseTokens = (tokens, cursor, stmt: any) => {
       return parseTokens(tokens, _cursor, _stmt)
     }
 
+    // arithmetic operators
     if(['+', '-', '*', '/'].includes(currentToken.data)) {
+      const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+    // relational operators 
+    if(['==', '!=', '<', '>', '>=', '<='].includes(currentToken.data)) {
       const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
       return parseTokens(tokens, _cursor, _stmt)
     }
