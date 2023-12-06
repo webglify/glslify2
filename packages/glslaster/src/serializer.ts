@@ -1,6 +1,6 @@
 import {
   BinaryExpression, 
-  Program, 
+  ProgramAST, 
   FunctionCall, 
   ConstructorCall, 
   VariableDeclaration, 
@@ -22,7 +22,9 @@ import {
   LogicalExpression,
   DefineDeclaration,
   ConditionalExpression,
-  StructInitializer
+  StructInitializer,
+  StructDeclaration,
+  VariableDeclarator
 } from '../src/parser'
 
 
@@ -30,7 +32,7 @@ const generateGLSL = (ast) => {
   if (!ast) return '';
 
   switch (ast.constructor) {
-    case Program:      
+    case ProgramAST:      
       return `#version ${ast.version}\n${ast.body.map(generateGLSL).join('\n')}`;
     case DefineDeclaration:
       return `#define ${ast.ident} ${ast.value}`
@@ -44,7 +46,16 @@ const generateGLSL = (ast) => {
     case BlockStatement:
       return `{\n ${ast.map(s => generateGLSL(s))}\n}`
     case StructInitializer:
-      return `{${ast.map((s, i) => generateGLSL(s)).join(', ')}}`  
+      return `{${ast.map((s, i) => generateGLSL(s)).join(', ')}}`
+    case StructDeclaration:
+      
+      const declarations = ast.declarations && ` ${ast.declarations.map(d => d.name).join(', ')}` || ``;
+      const res = `struct ${ast.name} {\n ${ast.fields.map(v => generateGLSL(v)).join('\n ')}\n}${declarations};`
+      
+      return res;
+
+    case VariableDeclarator:
+      return `${ast.dataType} ${ast.name};`
     case ConditionalExpression:
 
       return `${generateGLSL(ast.test)} ? ${generateGLSL(ast.consequent)} : ${generateGLSL(ast.alternate)}`

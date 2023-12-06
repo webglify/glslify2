@@ -71,7 +71,7 @@ class Cursor {
   }
 
   atStart(){
-    return this.pos === 0;
+    return this.pos < 0;
   }
 
   split(from: number = 0):[Cursor, Cursor] {
@@ -109,48 +109,63 @@ export default ({
     
     this.cursor = new Cursor(indeces)
 
-    console.log('tokens', this.tokens)
-
     return this
   },
   
   parseProgram(id: ProgramId, type: ProgramType){
 
-    const program = new Program(id, type)
+    const program = new Program(id, type, this.tokens)
     program.version = this.version
 
-    return parseProgram(this.tokens, this.cursor, program)
+    return parseProgram(program, this.cursor)
   },
-  parseTokens(){
-
-    return parseTokens(this.tokens, this.cursor, null)
+  parseTokens(id: ProgramId, type: ProgramType){
+    
+    const program = new Program(id, type, this.tokens)
+    return parseTokens(program, this.cursor, null)
   }
 
 })
 
-type StructTypesRegistryType = {[key: ProgramId]: StructType[]}
 
-const StructTypesRegistry: StructTypesRegistryType = {
-
-}
 
 type ProgramId = string
 type ProgramType = 'vertex' | 'fragment'
 
+export class ProgramAST  {
+  version: string
+  body: any[]  
+  constructor(version, body){
+    this.version = version
+    this.body = body
+  }
+}
 export class Program {
   id: ProgramId
   type: ProgramType
   version
+  tokens
   body = []
 
-  constructor(id: ProgramId, type: ProgramType, body?){
+  constructor(id: ProgramId, type: ProgramType, tokens, body?){
     this.id = id
     this.type = type
+    this.tokens = tokens
     if(body){
       this.body = body
     }
   }
 
+  get ast(): ProgramAST {
+    return new ProgramAST(this.version, this.body)
+  }
+
+  ct(c: Cursor) {
+    return this.tokens[c.current]
+  }
+  nt(c: Cursor) {
+    return this.tokens[c.next]
+  }
  
   removeNode(index) {
     this.body.splice(index, 1)
@@ -161,14 +176,8 @@ export class Program {
     this.body.splice(start, 0, node)
   }
 
-  addStructNode(struct: StructDeclaration, index?){
-    this.addNode(struct, index)
-    const r = StructTypesRegistry[this.id] || [] 
-    StructTypesRegistry[this.id] = [...r, struct.name]
-  }
-
   clone(){
-    const p = new Program(this.id, this.type)
+    const p = new Program(this.id, this.type, this.tokens)
     p.version = this.version
     this.body.forEach(d => p.addNode(d))
     return p
@@ -194,42 +203,42 @@ export class ParameterDeclaration {
   }
 }
 
-const obtainVariableDeclarationArgs = (tokens, cursor) => {
-  const ct = tokens[cursor.current]
+const obtainVariableDeclarationArgs = (program, cursor) => {
+  const ct = program.tokens[cursor.current]
   
   const args = []
   if(['in', 'out'].includes(ct.data)) {
     args.push(ct.data)
     cursor.forward()
   }
-  const ct2 = tokens[cursor.current]
+  const ct2 = program.tokens[cursor.current]
   args.splice(0, 0, ct2.data)
   
   cursor.forward()
-  const ct3 = tokens[cursor.current]
+  const ct3 = program.tokens[cursor.current]
   args.splice(1, 0, ct3.data)
 
   return [args, cursor.forward()]
 }
-const createParameterDeclaration = (tokens, cursor) => {
+const createParameterDeclaration = (program, cursor) => {
   
-  const [args] = obtainVariableDeclarationArgs(tokens, cursor)
+  const [args] = obtainVariableDeclarationArgs(program, cursor)
 
   return new ParameterDeclaration(args[0], args[1], args[2])
 }
 
 
 
-const getFuncParameters = (tokens, cursor): false | [c: Cursor, any]  => {
+const getFuncParameters = (program, cursor): false | [c: Cursor, any]  => {
 
-  const currentToken = tokens[cursor.current]
+  const currentToken = program.tokens[cursor.current]
   if(currentToken.data !== '(') return false
 
 
   const obtainParamsCursors = (indicies: number[][] = [[]], cursors: Cursor[] = []) => {
     cursor.forward()
     
-    const ct = tokens[cursor.current]
+    const ct = program.tokens[cursor.current]
     if(ct.data === '(' || cursor.eof) {
       throw new Error('function paramters signature is not valid')
     }
@@ -252,20 +261,20 @@ const getFuncParameters = (tokens, cursor): false | [c: Cursor, any]  => {
   }
 
   const pCursors = obtainParamsCursors().filter(c => c.length>0)
-  const parameters = pCursors.map(pCursor => createParameterDeclaration(tokens, pCursor))
+  const parameters = pCursors.map(pCursor => createParameterDeclaration(program, pCursor))
 
   return [cursor, parameters]
 }
 
-const getBody = (tokens, cursor): false | [c: Cursor, any]  => {
+const getBody = (program, cursor): false | [c: Cursor, any]  => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.data !== '{') return
 
   
   const obtainBodyCursor = (cursor2, depth=0) => {
 
-    const ct2 = tokens[cursor2.current]
+    const ct2 = program.tokens[cursor2.current]
     if(ct2.data === '{'){
       return obtainBodyCursor(cursor2.forward(), depth + 1)
     }
@@ -283,7 +292,7 @@ const getBody = (tokens, cursor): false | [c: Cursor, any]  => {
 
   const [c1, c2] = obtainBodyCursor(cursor.forward().clone())
 
-  const stmt = parseBody(tokens, c1)
+  const stmt = parseBody(program, c1)
 
   return [c2, stmt]
 } 
@@ -303,22 +312,22 @@ export class FunctionDeclaration {
 
 }
 
-const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor, any]  => {
+const getFunctionDeclaration = (program, cursor): false | [c: Cursor, any]  => {
 
-  const currentToken = tokens[cursor.current]
+  const currentToken = program.tokens[cursor.current]
   if(currentToken.type !== 'ident') return false
 
-  const prevToken = tokens[cursor.prev]
+  const prevToken = program.tokens[cursor.prev]
   if(prevToken?.type !== 'keyword') return false
 
-  const nextToken = tokens[cursor.next]
+  const nextToken = program.tokens[cursor.next]
   if(nextToken?.data !== '(') return false
 
-  const p = getFuncParameters(tokens, cursor.clone().forward())
+  const p = getFuncParameters(program, cursor.clone().forward())
   if(!p) return false
   const [pCursor, pStmts] = p
   
-  const b = getBody(tokens, pCursor.forward())
+  const b = getBody(program, pCursor.forward())
   if(!b) return false
 
   const [bCursor, bStmts] = b
@@ -337,11 +346,11 @@ const getFunctionDeclaration = (tokens, cursor): false | [c: Cursor, any]  => {
 
 type ParseResult = false | [Cursor, any]
 
-const addToProgram = (tokens, p: Program, pr: ParseResult) => {
+const addToProgram = (program, pr: ParseResult) => {
   if(pr) {
     const [_cursor, _stmt] = pr
-    p.addNode(_stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(_stmt)
+    return parseProgram(program, _cursor)
   }
 }
 
@@ -373,55 +382,55 @@ export class StructDeclaration  {
   }
 }
 
-const obtainStuctFields = (tokens, cursor, fields: VariableDeclarator[]) => {
+const obtainStuctFields = (program, cursor, fields: VariableDeclarator[]) => {
   
   if(cursor.eof) return fields
   
   // get: dataType name;
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   const dataType = ct.data
   
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   const name = nt.data
 
   const d = new VariableDeclarator(name, dataType)
   fields.push(d)
   
-  return obtainStuctFields(tokens, cursor.forward(3), fields)
+  return obtainStuctFields(program, cursor.forward(3), fields)
   
 }
 
-const obtainStructScopeDeclarations = (tokens, cursor, dataType, decls: VariableDeclarator[]) => {
+const obtainStructScopeDeclarations = (program, cursor, dataType, decls: VariableDeclarator[]) => {
   if(cursor.eof) return decls
   
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.type === 'ident') {
     decls.push(new VariableDeclarator(ct.data, dataType))
   }
-  return obtainStructScopeDeclarations(tokens, cursor.forward(), dataType, decls)
+  return obtainStructScopeDeclarations(program, cursor.forward(), dataType, decls)
 }
 
-const getStructDeclaration = (tokens, cursor): false | [Cursor, StructDeclaration] => {
+const getStructDeclaration = (program, cursor): false | [Cursor, StructDeclaration] => {
   
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.type !== 'keyword' || ct.data !== 'struct') return false
 
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   if(nt.type !== 'ident') return false
 
   const name = nt.data
 
-  const [bodyCursor, restCursor] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward().forward(), [['{'], ['}']])
+  const [bodyCursor, restCursor] = obtainParenthesesScopeCursor(program, cursor.forward().forward().forward(), [['{'], ['}']])
   
-  const fields = obtainStuctFields(tokens, bodyCursor, [])
+  const fields = obtainStuctFields(program, bodyCursor, [])
 
   const sd = new StructDeclaration(name, fields)
 
-  const _rc = findTokenCursor(tokens, restCursor, { type: 'operator', data: ';' })
+  const _rc = findTokenCursor(program, restCursor, { type: 'operator', data: ';' })
   if(!_rc) return [restCursor, sd]
   
   const [declCursor, _restCursor] = _rc.split()
-  const declarations = obtainStructScopeDeclarations(tokens, declCursor, sd.name, [])
+  const declarations = obtainStructScopeDeclarations(program, declCursor, sd.name, [])
 
   sd.setDeclarations(declarations)
 
@@ -430,14 +439,14 @@ const getStructDeclaration = (tokens, cursor): false | [Cursor, StructDeclaratio
 }
 export class StructInitializer extends Array {}
 
-const obtainStuctVariableInitialiser = (tokens, cursor): StructInitializer => {
+const obtainStuctVariableInitialiser = (program, cursor): StructInitializer => {
 
-  const [bodyCursor, _] = obtainParenthesesScopeCursor(tokens, cursor.forward(), [['{'], ['}']])
-  const argGroups = obtainFunctionArguments(tokens, bodyCursor)
+  const [bodyCursor, _] = obtainParenthesesScopeCursor(program, cursor.forward(), [['{'], ['}']])
+  const argGroups = obtainFunctionArguments(program, bodyCursor)
     
   const si = new StructInitializer()
   argGroups.forEach(argCursor => {
-      const arg = parseTokens(tokens, argCursor, null)
+      const arg = parseTokens(program, argCursor, null)
       si.push(arg)
 
     })
@@ -445,33 +454,33 @@ const obtainStuctVariableInitialiser = (tokens, cursor): StructInitializer => {
   return si
 }
 
-const getStuctVariableDeclaration = (tokens, cursor, programId: ProgramId): false | [Cursor, VariableDeclaration] => {
+const getStuctVariableDeclaration = (program, cursor): false | [Cursor, VariableDeclaration] => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.type !== 'ident') return false
   
-  const structTypes = StructTypesRegistry[programId]
+  const structTypes = program.getStructTypes()
   const dataType = ct.data
 
   if(!structTypes.includes(dataType)) return false
   
-  const vCursor = findTokenCursor(tokens, cursor, { type: 'operator', data: ';' })
+  const vCursor = findTokenCursor(program, cursor, { type: 'operator', data: ';' })
   if(!vCursor) return false
   
   const [vdCursor, restCursor] = vCursor.split()
   vdCursor.moveTo(cursor.current)
   vdCursor.forward()
-  const vdct = tokens[vdCursor.current]
+  const vdct = program.tokens[vdCursor.current]
   if(vdct.type !== 'ident') {
     throw new Error('struct type needs a variable name')
   }
   const name = vdct.data
   const vd = new VariableDeclaration(dataType, name)
 
-  const vdnt = tokens[vdCursor.next]
+  const vdnt = program.tokens[vdCursor.next]
   if(vdnt && assignmentOperators.includes(vdnt.data)) {
     
-    const initializer = obtainStuctVariableInitialiser(tokens, vdCursor.forward(2))
+    const initializer = obtainStuctVariableInitialiser(program, vdCursor.forward(2))
     vd.setInitializer(initializer)
 
   }
@@ -481,75 +490,99 @@ const getStuctVariableDeclaration = (tokens, cursor, programId: ProgramId): fals
   return [restCursor.forward(), vd]
 }
 
-const parseProgram = (tokens, cursor, p: Program) => {
+const getAssignmentExpression = (program, cursor: Cursor) => {
+  const ct = program.ct(cursor)
+  if(!assignmentOperators.includes(ct.data)) return
+  
+  const [leftCursor, rightCursor] = cursor.split()
 
-  if(cursor.eof) return p
+  const vCursor = findPrevTokenCursor(program, leftCursor, { type: 'operator', data: ';' })
+  const rCursor = findTokenCursor(program, rightCursor, { type: 'operator', data: ';' })
+  if(!vCursor || !rCursor) return false
+  
+  const leftStmt = parseTokens(program, leftCursor, null)
 
-  const pi = getPragmaImportDeclaration(tokens, cursor)
+  const [arCursor, restCursor] = rCursor.split()
+  
+  const rightStmt = parseTokens(program, arCursor, null)
+  
+  const ae = new AssignmentExpression(ct.data, leftStmt, rightStmt)
+
+  return [restCursor, ae]
+}
+
+const parseProgram = (program:Program, cursor) => {
+
+  if(cursor.eof) return program
+
+  const pi = getPragmaImportDeclaration(program, cursor)
   if(pi) {
     const [_cursor, stmt] = pi
-    p.addNode(stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
   }
 
-  const dd = getDefineDeclaration(tokens, cursor) 
+  const dd = getDefineDeclaration(program, cursor) 
   if(dd) {
     const [_cursor, stmt] = dd
-    p.addNode(stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
   }
 
-  const sd = getStructDeclaration(tokens, cursor)
+  const sd = getStructDeclaration(program, cursor)
   if(sd) {
     const [_cursor, stmt] = sd
-    p.addStructNode(stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
   }
 
-  const svd = getStuctVariableDeclaration(tokens, cursor, p.id)
+  const svd = getStuctVariableDeclaration(program, cursor)
   if(svd) {
     const [_cursor, stmt] = svd
-    p.addNode(stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
   }
 
   
-
-  
-  const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
+  const vld = getVariableDeclarationWithLayoutToken(program, cursor)
   if(vld){
       const [_cursor, _stmt] = vld
-      p.addNode(_stmt)
+      program.addNode(_stmt)
 
-      return parseProgram(tokens, _cursor, p)
+      return parseProgram(program, _cursor)
   }
 
-  const vd = getVariableDeclaration(tokens, cursor)
-  console.log('vd', vd, tokens[cursor.current], isVariableDeclarationToken(tokens, cursor))
-//   if(isVariableDeclarationToken(tokens, cursor)){
-//     const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
-//     return parseTokens(tokens, _cursor, _stmt)
-// }
+  const vd = getVariableDeclaration(program, cursor)
   if(vd){
     const [_cursor, _stmt] = vd
-    p.addNode(_stmt)
+    program.addNode(_stmt)
 
-    return parseProgram(tokens, _cursor, p)
-}
-    const pd = getPrecisionQualifier(tokens, cursor)
-    if(pd) return addToProgram(tokens, p, pd)
+    return parseProgram(program, _cursor)
+  }
+  
+
+  const ae = getAssignmentExpression(program, cursor);
+  if(ae){
+    const [_cursor, _stmt] = ae
+    program.addNode(_stmt)
+
+    return parseProgram(program, _cursor)
+  }
+
+  const pd = getPrecisionQualifier(program, cursor)
+  if(pd) return addToProgram(program, pd)
 
 
-  const f = getFunctionDeclaration(tokens, cursor)
+  const f = getFunctionDeclaration(program, cursor)
   if(f) {
     const [_cursor, stmt] = f
-    p.addNode(stmt)
-    return parseProgram(tokens, _cursor, p)
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
   }
 
   
 
-  return parseProgram(tokens, cursor.forward(), p)
+  return parseProgram(program, cursor.forward())
 }
 
 export class ImportDeclaration {
@@ -563,9 +596,9 @@ export class ImportDeclaration {
 
 
 
-const getPragmaImportDeclaration = (tokens, cursor): false | [Cursor, ImportDeclaration] => {
+const getPragmaImportDeclaration = (program, cursor): false | [Cursor, ImportDeclaration] => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   
   if(ct.type !== 'preprocessor') return false
 
@@ -594,13 +627,11 @@ export class DefineDeclaration {
 
 }
 
-const getDefineDeclaration = (tokens, cursor): false | [Cursor, DefineDeclaration] => {
+const getDefineDeclaration = (program, cursor): false | [Cursor, DefineDeclaration] => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   
   if(ct.type !== 'preprocessor') return false
-
-  console.log('preprocessor ct', ct)
 
   const defineBlock = ct.data.match(/#define\:?\s(.*)\s+(.*)/)
 
@@ -624,16 +655,16 @@ export class PrecisionQualifierDeclaration {
 const precicionKeyowrds = ['mediump', 'highp', 'lowp']
 
 
-const getPrecisionQualifier = (tokens, cursor): false | [Cursor, PrecisionQualifierDeclaration] => {
-  const ct = tokens[cursor.current]
+const getPrecisionQualifier = (program, cursor): false | [Cursor, PrecisionQualifierDeclaration] => {
+  const ct = program.tokens[cursor.current]
   if(ct.data !== 'precision' && ct.type !== 'keyword') return false
   
   const c2 = cursor.clone().forward()
-  const c2t = tokens[c2.current]
+  const c2t = program.tokens[c2.current]
   if(c2t.type !== 'keyword' || !precicionKeyowrds.includes(c2t.data)) return false
 
   c2.forward()
-  const c3t = tokens[c2.current]
+  const c3t = program.tokens[c2.current]
   if(c3t.type !== 'keyword') return false
   
   return [c2.forward(), new PrecisionQualifierDeclaration(c2t.data, c3t.data)]
@@ -642,7 +673,7 @@ const getPrecisionQualifier = (tokens, cursor): false | [Cursor, PrecisionQualif
 }
 
 
-const parseBody = (tokens, cursor) => {
+const parseBody = (program, cursor) => {
 
   const obtainScope = (cursor2, locsCursor: number[][] = [[]], acc: Cursor[] = []) => {
 
@@ -652,7 +683,7 @@ const parseBody = (tokens, cursor) => {
     
     locsCursor[locsCursor.length - 1].push(cursor2.current)
 
-    const currentToken = tokens[cursor2.current]
+    const currentToken = program.tokens[cursor2.current]
 
     if(currentToken.data === ';'){
       
@@ -666,17 +697,17 @@ const parseBody = (tokens, cursor) => {
 
   const locsC = obtainScope(cursor)
 
-  const stmts = locsC.map(locCursor => parseTokens(tokens, locCursor, null))
+  const stmts = locsC.map(locCursor => parseTokens(program, locCursor, null))
   
 
 
   return stmts
 }
 
-const obtainParenthesesScopeCursor = (tokens, cursor, p = [['('],[')']]) => {
+const obtainParenthesesScopeCursor = (program, cursor, p = [['('],[')']]) => {
   
   const obtainScope = (cursor2, depth = 0): [Cursor, Cursor] => {
-    const currentToken = tokens[cursor2.current]
+    const currentToken = program.tokens[cursor2.current]
     if (currentToken.data == p[1]){
       if(depth === 0) {
         
@@ -758,13 +789,13 @@ const createBinaryExpression = (next, op, prev, bo) => {
 
 
 
-const getNegativSigned = (tokens, cursor) : false | [Cursor, Literal|Identifier] => {
+const getNegativSigned = (program, cursor) : false | [Cursor, Literal|Identifier] => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.data !== '-') return false
 
-  const prev = tokens[cursor.prev]  
-  const next = tokens[cursor.next]
+  const prev = program.tokens[cursor.prev]  
+  const next = program.tokens[cursor.next]
   
 
   if(((!prev || !['integer', 'float', 'ident'].includes(prev.type)))
@@ -785,19 +816,19 @@ const getNegativSigned = (tokens, cursor) : false | [Cursor, Literal|Identifier]
 }
 
 
-const addBinaryExpression = (tokens, cursor, bo) => {
+const addBinaryExpression = (program, cursor, bo) => {
 
-  const prev = tokens[cursor.prev]
-  const op = tokens[cursor.current]
-  const next = tokens[cursor.next]
+  const prev = program.tokens[cursor.prev]
+  const op = program.tokens[cursor.current]
+  const next = program.tokens[cursor.next]
   
   
   
   // right operand parenteses
   if(next.data === '(') {
-    const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+    const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
     
-    const aggr = parseTokens(tokens, c1, null)
+    const aggr = parseTokens(program, c1, null)
     const nextBO = aggr instanceof BinaryExpression
     ? new BinaryExpression({...aggr, parentheses: true})
     : aggr
@@ -808,15 +839,15 @@ const addBinaryExpression = (tokens, cursor, bo) => {
     return [c2, pb]
   }
 
-  if(isFunctionCallToken(tokens, cursor.clone().forward())){
-    const [_cursor, _aggr] = addFunctionCall(tokens, cursor.forward())
+  if(isFunctionCallToken(program, cursor.clone().forward())){
+    const [_cursor, _aggr] = addFunctionCall(program, cursor.forward())
     
     const pb = createBinaryExpression(_aggr, op, prev, bo) 
 
     return [_cursor, pb]
   }
 
-  const me = getMemberExpression(tokens, cursor.clone().forward())
+  const me = getMemberExpression(program, cursor.clone().forward())
   if(me){
     const [_cursor, _aggr] = me
     
@@ -825,7 +856,7 @@ const addBinaryExpression = (tokens, cursor, bo) => {
     return [_cursor, pb]
   }
 
-  const r = getNegativSigned(tokens, cursor.clone().forward())
+  const r = getNegativSigned(program, cursor.clone().forward())
   if(r) {
     const [_cursor, _next] = r
     const npb = createBinaryExpression(
@@ -846,7 +877,7 @@ const addBinaryExpression = (tokens, cursor, bo) => {
 }
 
 
-const obtainFunctionArguments = (tokens, cursor) => {
+const obtainFunctionArguments = (program, cursor) => {
 
   const argsCursor = []
 
@@ -857,7 +888,7 @@ const obtainFunctionArguments = (tokens, cursor) => {
       return groups
     } 
     
-    const currentToken = tokens[cursor2.current]
+    const currentToken = program.tokens[cursor2.current]
     
     if(currentToken.data === ',' && depth === 0){
       argsCursor.push(new Cursor(groups[groups.length - 1]))
@@ -904,33 +935,33 @@ export class FunctionCall {
 }
 export class ConstructorCall extends FunctionCall{}
 
-const isFunctionCallToken = (tokens, cursor) => {
-  const currentToken = tokens[cursor.current]
-  const nextToken = tokens[cursor.next]
+const isFunctionCallToken = (program, cursor) => {
+  const currentToken = program.tokens[cursor.current]
+  const nextToken = program.tokens[cursor.next]
   
   return ['builtin', 'keyword', 'ident'].includes(currentToken.type) 
   && nextToken 
   && nextToken.data === '('
   
 }
-const addFunctionCall = (tokens, cursor): [Cursor, FunctionCall|ConstructorCall] => {
+const addFunctionCall = (program, cursor): [Cursor, FunctionCall|ConstructorCall] => {
   
-  if(!isFunctionCallToken(tokens, cursor)){
+  if(!isFunctionCallToken(program, cursor)){
     throw new Error('not a function call token')
   }
   
   // function arguments
-  const currentToken = tokens[cursor.current]
+  const currentToken = program.tokens[cursor.current]
   
     const fc = currentToken.type === 'keyword' 
     ? new ConstructorCall(currentToken.data)
     : new FunctionCall(currentToken.data)
 
-    const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
-    const argGroups = obtainFunctionArguments(tokens, c1)
+    const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
+    const argGroups = obtainFunctionArguments(program, c1)
     
     argGroups.forEach(argCursor => {
-        const arg = parseTokens(tokens, argCursor, null)
+        const arg = parseTokens(program, argCursor, null)
         fc.addArgument(arg)
       })
 
@@ -957,10 +988,10 @@ export class VariableDeclaration {
   }
 }
 
-const isVariableDeclarationToken = (tokens, cursor) => {
-  const currentToken = tokens[cursor.current]
-  const prevToken = tokens[cursor.prev]
-  const nextToken = tokens[cursor.next]
+const isVariableDeclarationToken = (program, cursor) => {
+  const currentToken = program.tokens[cursor.current]
+  const prevToken = program.tokens[cursor.prev]
+  const nextToken = program.tokens[cursor.next]
   
   
   
@@ -969,24 +1000,24 @@ const isVariableDeclarationToken = (tokens, cursor) => {
   && nextToken && nextToken.data === '='
 }
 
-const addVariableDeclaration = (tokens, cursor) => {
-  if(!isVariableDeclarationToken(tokens, cursor)){
+const addVariableDeclaration = (program, cursor) => {
+  if(!isVariableDeclarationToken(program, cursor)){
     throw new Error('token is not a variable declaration')
   }
 
-  const dataType = tokens[cursor.prev]
-  const identifier = tokens[cursor.current]
+  const dataType = program.tokens[cursor.prev]
+  const identifier = program.tokens[cursor.current]
 
-  const initializer = parseTokens(tokens, cursor.forward(), null)
-  const vd = new VariableDeclaration(dataType, identifier, initializer)
+  const initializer = parseTokens(program, cursor.forward(), null)
+  const vd = new VariableDeclaration(dataType.data, identifier.data, initializer)
   return [cursor.toEnd(), vd]
   
 }
 
 const assignmentOperators = ['=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>=']
 
-const isAssignmentExpressionToken = (tokens, cursor, aggs) => {
-  const ct = tokens[cursor.current]
+const isAssignmentExpressionToken = (program, cursor, aggs) => {
+  const ct = program.tokens[cursor.current]
 
   const b = (
     aggs instanceof MemberExpression || 
@@ -1010,14 +1041,14 @@ export class AssignmentExpression {
 
 export class CompoundAssignmentExpression extends AssignmentExpression {}
 
-const addAssignmentExpression = (tokens, cursor, aggs) => {
-  if(!isAssignmentExpressionToken(tokens, cursor, aggs)){
+const addAssignmentExpression = (program, cursor, aggs) => {
+  if(!isAssignmentExpressionToken(program, cursor, aggs)){
     throw new Error('not a assignment expresson token')
   }
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   const left = aggs
-  const right = parseTokens(tokens, cursor.forward(), null)
+  const right = parseTokens(program, cursor.forward(), null)
 
 
   const stmt = ct.data === '='
@@ -1057,15 +1088,15 @@ const createLiteralOrIdent = ({type, data}) => {
   return a
 }
 
-const addLiteralIdent = (tokens, cursor) => {
-  const a = createLiteralOrIdent(tokens[cursor.current]);
+const addLiteralIdent = (program, cursor) => {
+  const a = createLiteralOrIdent(program.tokens[cursor.current]);
   return [cursor.forward(), a]
 }
 
 
-const isReturnToken = (tokens, cursor) => {
+const isReturnToken = (program, cursor) => {
   
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   return ct && ct.type === 'keyword' && ct.data === 'return'
   
 }
@@ -1077,8 +1108,8 @@ export class ReturnStatement {
   }
 }
 
-const addReturnStatement = (tokens, cursor) => {
-  const stmt = parseTokens(tokens, cursor.forward(), null)
+const addReturnStatement = (program, cursor) => {
+  const stmt = parseTokens(program, cursor.forward(), null)
   return [cursor.toEnd(), new ReturnStatement(stmt)]
 }
 
@@ -1094,15 +1125,15 @@ export class MemberExpression {
   }
 
 }
-const getMemberExpression = (tokens, cursor): false | [Cursor, MemberExpression] => {
-  const ct = tokens[cursor.current]
+const getMemberExpression = (program, cursor): false | [Cursor, MemberExpression] => {
+  const ct = program.tokens[cursor.current]
   if(ct.type !== 'ident') return  false
   
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   if(!nt || !['.', '['].includes(nt.data)) return false
 
   const c2 = cursor.clone().forward().forward()
-  const c2t = tokens[c2.current]
+  const c2t = program.tokens[c2.current]
   if(!c2t || !['ident','integer', 'float'].includes(c2t.type)) return  false
 
   // computed false
@@ -1115,8 +1146,8 @@ const getMemberExpression = (tokens, cursor): false | [Cursor, MemberExpression]
   ]
   
   // computed true
-  const [pc1, pc2] = obtainParenthesesScopeCursor(tokens, c2, [['['], [']']])
-  const property = parseTokens(tokens, pc1, null)
+  const [pc1, pc2] = obtainParenthesesScopeCursor(program, c2, [['['], [']']])
+  const property = parseTokens(program, pc1, null)
   return [
     pc2.forward(), 
     new MemberExpression(
@@ -1171,55 +1202,55 @@ export class Parameter {
   }
 }
 
-const createParameter = (tokens, cursor) => {
-  const ct = tokens[cursor.current]
+const createParameter = (program, cursor) => {
+  const ct = program.tokens[cursor.current]
   const name = ct.data
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   if(!nt || nt.data !== '=') return new Parameter(name)
 
   const ct2 = cursor.forward().forward()
   
 
-  const value = tokens[ct2.current].data
+  const value = program.tokens[ct2.current].data
   
   return new Parameter(name, value)
 }
 
-const getVariableDeclarationWithLayoutToken = (tokens, cursor) : false | [Cursor, QualifiedVariableDeclaration] => {
+const getVariableDeclarationWithLayoutToken = (program, cursor) : false | [Cursor, QualifiedVariableDeclaration] => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
 
   if(ct.data !== 'layout') return false
 
   
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   
   if(!nt || nt.data !== '(') return false
 
 
   const c2 = cursor.clone().forward().forward()
-  const [ct1, ct2] = obtainParenthesesScopeCursor(tokens, c2)
+  const [ct1, ct2] = obtainParenthesesScopeCursor(program, c2)
 
-  const parameter = createParameter(tokens, ct1)
+  const parameter = createParameter(program, ct1)
   const layout = new LayoutQualifier(parameter)
-  return getVariableDeclaration(tokens, ct2.forward(), layout)
+  return getVariableDeclaration(program, ct2.forward(), layout)
 
 }
 
-const moveToToken = (tokens,cursor, token): false | Cursor => {
+const moveToToken = (program,cursor, token): false | Cursor => {
   if(cursor.eof) return false
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(ct.type == token.type && ct.data == token.data) return cursor
-  else return moveToToken(tokens, cursor.forward(), token)
+  else return moveToToken(program, cursor.forward(), token)
 }
 
-const getExpression = (tokens, cursor): false | [Cursor, any]=> {
-  const rc2 = moveToToken(tokens, cursor.clone(), {data: ';', type: 'operator'})
+const getExpression = (program, cursor): false | [Cursor, any]=> {
+  const rc2 = moveToToken(program, cursor.clone(), {data: ';', type: 'operator'})
   
   if(!rc2) return false
 
   const [rc2a, rc2b] = rc2.split(cursor.pos)
-  const stmt = parseTokens(tokens, rc2a, null)
+  const stmt = parseTokens(program, rc2a, null)
   
 
   return [rc2b, stmt]
@@ -1227,20 +1258,20 @@ const getExpression = (tokens, cursor): false | [Cursor, any]=> {
 
 }
 
-const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, QualifiedVariableDeclaration] => {
+const getVariableDeclaration = (program, cursor, qualifier?) : false | [Cursor, QualifiedVariableDeclaration] => {
   const c2 = cursor.clone()
 
-  const ct = tokens[c2.current]
+  const ct = program.tokens[c2.current]
 
 
   if(ct.type !== 'keyword' || !['in', 'out', 'uniform', 'const'].includes(ct.data)) return false
 
   
-  const storageQualifier = tokens[c2.current].data
+  const storageQualifier = program.tokens[c2.current].data
   c2.forward()
   
   
-  const c2t = tokens[c2.current]
+  const c2t = program.tokens[c2.current]
   
   if(!c2t || c2t.type !== 'keyword') return false
 
@@ -1248,20 +1279,20 @@ const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, Q
   if(precicionKeyowrds.includes(c2t.data)) {
     precisionQualifier = c2t.data
     c2.forward()
-    const nt2 = tokens[c2.current]
+    const nt2 = program.tokens[c2.current]
     if(!nt2 || nt2.type !== 'keyword') return false
   }
   
-  const dataType = tokens[c2.current].data
+  const dataType = program.tokens[c2.current].data
 
   c2.forward()
-  const c3t = tokens[c2.current]
+  const c3t = program.tokens[c2.current]
   if(c3t.type !== 'ident') return false
 
   const name = c3t.data
   
   c2.forward()
-  const c4t = tokens[c2.current]
+  const c4t = program.tokens[c2.current]
   
   let initializer
   let cursorToReturn = c2
@@ -1269,7 +1300,7 @@ const getVariableDeclaration = (tokens, cursor, qualifier?) : false | [Cursor, Q
   
   if(c4t.data === '=') {
     
-    const expr = getExpression(tokens, c2.forward())
+    const expr = getExpression(program, c2.forward())
 
     if(expr) {
       cursorToReturn = expr[0]
@@ -1316,45 +1347,45 @@ export class ElseIfStatement extends IfStatement {}
 
 type Alternate = IfStatement | BlockStatement | ElseIfStatement
 
-const getIfStatement = (tokens, cursor, elseif: boolean = false): false | [Cursor, IfStatement] =>  {
+const getIfStatement = (program, cursor, elseif: boolean = false): false | [Cursor, IfStatement] =>  {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   
   if(!ct || ct.type !== 'keyword' || ct.data !== 'if') return false
   
   
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
   if(nt.data != '(') return false
 
-  const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
+  const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
 
   
-  const test = parseTokens(tokens, c1, null)
+  const test = parseTokens(program, c1, null)
 
-  const bt = tokens[c2.next]
+  const bt = program.tokens[c2.next]
   if(bt.type !== 'operator' && bt.data !== '{') {
     throw new Error('syntax error, if statments need a block {')
   }
 
-  const [b1, b2] = obtainParenthesesScopeCursor(tokens, c2.forward().forward(), [['{'], ['}']])
-  const consequent = parseBody(tokens, b1)
+  const [b1, b2] = obtainParenthesesScopeCursor(program, c2.forward().forward(), [['{'], ['}']])
+  const consequent = parseBody(program, b1)
   
 
   const STMT = elseif 
   ? new ElseIfStatement(test, BlockStatement.from(consequent))
   : new IfStatement(test, BlockStatement.from(consequent))
 
-  const nit = tokens[b2.next]
+  const nit = program.tokens[b2.next]
   
   if(nit && nit.type == 'keyword' && nit.data == 'else') {
 
     b2.forward()
-    const nt = tokens[b2.next]
+    const nt = program.tokens[b2.next]
     
 
     if(nt.type === 'keyword' && nt.data === 'if') {
       // follow up 'else if' statement
-      const res = getIfStatement(tokens, b2.forward(), true)
+      const res = getIfStatement(program, b2.forward(), true)
       if(res) {
       
         const [cursor2, alternate] = res
@@ -1368,10 +1399,10 @@ const getIfStatement = (tokens, cursor, elseif: boolean = false): false | [Curso
       if(nt.type !== 'operator' && nt.data !== '{') {
         throw new Error('syntax error, if statments need a block {')
       }
-      const [a1, a2] = obtainParenthesesScopeCursor(tokens, b2.forward().forward(), [['{'], ['}']])
+      const [a1, a2] = obtainParenthesesScopeCursor(program, b2.forward().forward(), [['{'], ['}']])
 
 
-      const alternate = parseBody(tokens, a1)
+      const alternate = parseBody(program, a1)
       STMT.setAlternate(alternate)
 
       return [a2.forward(), STMT]
@@ -1420,20 +1451,20 @@ export class LogicalExpression {
   }
 }
 
-const addLogicalExpression = (tokens, cursor, stmt: any) => {
+const addLogicalExpression = (program, cursor, stmt: any) => {
 
-  const ct = tokens[cursor.current]
+  const ct = program.tokens[cursor.current]
   if(!['||', '&&'].includes(ct.data)) {
     throw new Error(`not a logical operator ${JSON.stringify(ct)}`)
   }
 
-  const nt = tokens[cursor.next]
+  const nt = program.tokens[cursor.next]
 
   // right operand (binary expresson)
   if(['('].includes(nt.data)) {
 
-    const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward())
-    const right = parseTokens(tokens, c1, null)
+    const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
+    const right = parseTokens(program, c1, null)
     if([BinaryExpression, LogicalExpression].includes(right.constructor)) {
       right.parentheses = true
     }
@@ -1441,8 +1472,8 @@ const addLogicalExpression = (tokens, cursor, stmt: any) => {
     return [c2, expr]  
   
   }
-  if(isFunctionCallToken(tokens, cursor.clone().forward())){
-    const [_cursor, right] = addFunctionCall(tokens, cursor.forward())
+  if(isFunctionCallToken(program, cursor.clone().forward())){
+    const [_cursor, right] = addFunctionCall(program, cursor.forward())
     // track global cursor pos
     cursor.moveTo(_cursor.current)
     const expr = new LogicalExpression(ct.data, stmt, right)
@@ -1450,7 +1481,7 @@ const addLogicalExpression = (tokens, cursor, stmt: any) => {
     return [_cursor, expr]
   }
 
-  const me = getMemberExpression(tokens, cursor.clone().forward())
+  const me = getMemberExpression(program, cursor.clone().forward())
   if(me){
     const [_cursor, right] = me
     
@@ -1461,7 +1492,7 @@ const addLogicalExpression = (tokens, cursor, stmt: any) => {
     return [_cursor, expr]
   }
 
-  const r = getNegativSigned(tokens, cursor.clone().forward())
+  const r = getNegativSigned(program, cursor.clone().forward())
   if(r) {
     const [_cursor, right] = r
     const expr = new LogicalExpression(ct.data, stmt, right)
@@ -1469,7 +1500,7 @@ const addLogicalExpression = (tokens, cursor, stmt: any) => {
   }
 
 
-  const right = parseTokens(tokens, cursor.forward(), null)
+  const right = parseTokens(program, cursor.forward(), null)
   const expr = new LogicalExpression(ct.data, stmt, right)
 
   return [cursor, expr]
@@ -1490,12 +1521,12 @@ export class ConditionalExpression implements StmtNode {
 
 }
 
-const findTokenCursor = (tokens, cursor, token) : false | Cursor => {
+const findTokenCursor = (program, cursor, token) : false | Cursor => {
     const _c = cursor.clone()
 
 
     while(!_c.eof) {
-      const ct = tokens[_c.current]
+      const ct = program.tokens[_c.current]
       if(ct.data === token.data && ct.type === token.type){
         return _c
       }
@@ -1506,20 +1537,37 @@ const findTokenCursor = (tokens, cursor, token) : false | Cursor => {
 
 }
 
-const getConditionalExpression = (tokens, cursor, stmt) :  false | [Cursor, ConditionalExpression]  => {
+const findPrevTokenCursor = (program, cursor, token) : false | Cursor => {
+  const _c = cursor.clone()
 
-  const ct = tokens[cursor.current]
+
+  while(!_c.atStart()) {
+    const ct = program.ct(_c)
+    
+    if(ct.data === token.data && ct.type === token.type){
+      return _c
+    }
+    _c.backward()
+  }
+
+  return false
+
+}
+
+const getConditionalExpression = (program, cursor, stmt) :  false | [Cursor, ConditionalExpression]  => {
+
+  const ct = program.tokens[cursor.current]
   if(ct.data !== '?') return false
   
-  const tokenCursor = findTokenCursor(tokens, cursor, { type: 'operator', data: ':' })
+  const tokenCursor = findTokenCursor(program, cursor, { type: 'operator', data: ':' })
   if(!tokenCursor) return false
 
   const [conseq, alter] = tokenCursor.split()
   
   conseq.moveTo(cursor.current)
   
-  const conseqStmt = parseTokens(tokens, conseq, null)
-  const alterStmt = parseTokens(tokens, alter, null)
+  const conseqStmt = parseTokens(program, conseq, null)
+  const alterStmt = parseTokens(program, alter, null)
 
   const expr = new ConditionalExpression(stmt, conseqStmt, alterStmt)
   
@@ -1527,55 +1575,55 @@ const getConditionalExpression = (tokens, cursor, stmt) :  false | [Cursor, Cond
   return [alter, expr]
 }
 
-const parseTokens = (tokens, cursor, stmt: any) => {
+const parseTokens = (program, cursor, stmt: any) => {
 
     if(cursor.eof) return stmt
 
-    const currentToken = tokens[cursor.current]
+    const currentToken = program.tokens[cursor.current]
 
     
-    const ifStatment = getIfStatement(tokens, cursor);
+    const ifStatment = getIfStatement(program, cursor);
     if(ifStatment) {
       const [_cursor, _stmt] = ifStatment
-      return parseTokens(tokens, _cursor, _stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
-    const condExpr = getConditionalExpression(tokens, cursor, stmt);
+    const condExpr = getConditionalExpression(program, cursor, stmt);
     if(condExpr) {
       const [_cursor, _stmt] = condExpr
-      return parseTokens(tokens, _cursor, _stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
-    if(isReturnToken(tokens, cursor)) {
-      const [_cursor, _stmt] = addReturnStatement(tokens, cursor)
-      return parseTokens(tokens, _cursor, _stmt)
+    if(isReturnToken(program, cursor)) {
+      const [_cursor, _stmt] = addReturnStatement(program, cursor)
+      return parseTokens(program, _cursor, _stmt)
     }
     
-    if(isFunctionCallToken(tokens, cursor)){
-      const [_cursor, _stmt] = addFunctionCall(tokens, cursor)
-      return parseTokens(tokens, _cursor, _stmt)
+    if(isFunctionCallToken(program, cursor)){
+      const [_cursor, _stmt] = addFunctionCall(program, cursor)
+      return parseTokens(program, _cursor, _stmt)
     }
 
 
 
-    const me = getMemberExpression(tokens, cursor)
+    const me = getMemberExpression(program, cursor)
     if(me) {
       const [_cursor, _stmt] = me
-      return parseTokens(tokens, _cursor, _stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
-    if(isVariableDeclarationToken(tokens, cursor)){
-        const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
-        return parseTokens(tokens, _cursor, _stmt)
+    if(isVariableDeclarationToken(program, cursor)){
+        const [_cursor, _stmt] = addVariableDeclaration(program, cursor)
+        return parseTokens(program, _cursor, _stmt)
     }
 
     
 
   
     
-  if(isAssignmentExpressionToken(tokens, cursor, stmt)){
-    const [_cursor, _stmt] = addAssignmentExpression(tokens, cursor, stmt)
-    return parseTokens(tokens, _cursor, _stmt)
+  if(isAssignmentExpressionToken(program, cursor, stmt)){
+    const [_cursor, _stmt] = addAssignmentExpression(program, cursor, stmt)
+    return parseTokens(program, _cursor, _stmt)
   }
  
   
@@ -1583,45 +1631,45 @@ const parseTokens = (tokens, cursor, stmt: any) => {
     // left operand parenteses
     if(['('].includes(currentToken.data)) {
 
-      const [c1, c2] = obtainParenthesesScopeCursor(tokens, cursor.forward())
-      const aggr = parseTokens(tokens, c1, stmt)
-      console.log('left operand', c2, tokens[11], aggr)
+      const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward())
+      const aggr = parseTokens(program, c1, stmt)
+      console.log('left operand', c2, program.tokens[11], aggr)
       if([BinaryExpression, LogicalExpression].includes(aggr.constructor)) {
         aggr.parentheses = true      
       } 
-      return parseTokens(tokens, c2, aggr)
+      return parseTokens(program, c2, aggr)
 
     }
 
-    const ns = getNegativSigned(tokens, cursor)
+    const ns = getNegativSigned(program, cursor)
     if(ns) {
       const [_cursor, _stmt] = ns
-      return parseTokens(tokens, _cursor, _stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
     // arithmetic operators
     if(['+', '-', '*', '/'].includes(currentToken.data)) {
-      const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
-      return parseTokens(tokens, _cursor, _stmt)
+      const [_cursor, _stmt] = addBinaryExpression(program, cursor, stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
     // relational operators 
     if(['==', '!=', '<', '>', '>=', '<='].includes(currentToken.data)) {
-      const [_cursor, _stmt] = addBinaryExpression(tokens, cursor, stmt)
-      return parseTokens(tokens, _cursor, _stmt)
+      const [_cursor, _stmt] = addBinaryExpression(program, cursor, stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
     // logical operators 
     if(['||', '&&'].includes(currentToken.data)) {
-      const [_cursor, _stmt] = addLogicalExpression(tokens, cursor, stmt)
+      const [_cursor, _stmt] = addLogicalExpression(program, cursor, stmt)
       console.log('addLogicalExpression', _cursor, _stmt)
-      return parseTokens(tokens, _cursor, _stmt)
+      return parseTokens(program, _cursor, _stmt)
     }
 
     if(['integer', 'float','ident', 'builtin'].includes(currentToken.type)){
-      const [_cursor, _stmt] = addLiteralIdent(tokens, cursor)
-      return parseTokens(tokens, _cursor, _stmt)
+      const [_cursor, _stmt] = addLiteralIdent(program, cursor)
+      return parseTokens(program, _cursor, _stmt)
     }
 
 
-    return parseTokens(tokens, cursor.forward(), stmt)
+    return parseTokens(program, cursor.forward(), stmt)
 }
