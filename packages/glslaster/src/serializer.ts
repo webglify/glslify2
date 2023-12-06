@@ -21,7 +21,8 @@ import {
   PrecisionQualifierDeclaration,
   LogicalExpression,
   DefineDeclaration,
-  ConditionalExpression
+  ConditionalExpression,
+  StructInitializer
 } from '../src/parser'
 
 
@@ -40,9 +41,10 @@ const generateGLSL = (ast) => {
       const prefix = alternate && `else ` || ''
       
       return `${start} ${prefix}${generateGLSL(alternate)}`
-    case BlockStatement: 
-
+    case BlockStatement:
       return `{\n ${ast.map(s => generateGLSL(s))}\n}`
+    case StructInitializer:
+      return `{${ast.map((s, i) => generateGLSL(s)).join(', ')}}`  
     case ConditionalExpression:
 
       return `${generateGLSL(ast.test)} ? ${generateGLSL(ast.consequent)} : ${generateGLSL(ast.alternate)}`
@@ -57,8 +59,8 @@ const generateGLSL = (ast) => {
     case ParameterDeclaration:
       return `${ast.dataType} ${ast.name}`;
     case VariableDeclaration:
-      const initializer = generateGLSL(ast.initializer);
-      return `${ast.dataType} ${ast.name} = ${initializer};`;
+      const initializer = ast.initializer ? ` = ${generateGLSL(ast.initializer)}`: '' ;
+      return `${ast.dataType} ${ast.name}${initializer};`;
     case QualifiedVariableDeclaration:
       const qualifier = ast.qualifier ? `${generateGLSL(ast.qualifier)} ` : ``
       const pQualifier = ast.precisionQualifier? `${ast.precisionQualifier} ` : ``

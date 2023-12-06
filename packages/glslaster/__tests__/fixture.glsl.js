@@ -157,4 +157,16 @@ void main() {
   
   vGlyphPadding = aGlyphPadding;
   
-}`}
+}`,
+glslStuct: `
+struct Light {
+  vec3 position;
+  vec3 color;
+  float intensity;
+} myLight1, myLight2;
+
+Light myLight3;
+Light myLight1 = {vec3(1.), vec3(1.), .1};
+myLight3.position = vec3(1.);
+`
+}

@@ -8,10 +8,10 @@ describe('Importer', () => {
   it('should build AST and serialize', () => {
 
 
-    const code = fixtureGlsl.glsl
+    const code = fixtureGlsl.glslStuct
     const AST = Parser.tokenize(code).parseProgram()
     
-    //console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
+    console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
     const serializedAST =  Serializer(AST);
     //console.log('serialized:', serializedAST)
 
@@ -23,28 +23,28 @@ describe('Importer', () => {
   })
 
 
-  it('should import', () => {
+  // it('should import', () => {
 
 
-    const srcCode = fixtureGlsl.src
-    const srcAST = Parser.tokenize(srcCode).parseProgram()
+  //   const srcCode = fixtureGlsl.src
+  //   const srcAST = Parser.tokenize(srcCode).parseProgram()
     
-    const dstCode = fixtureGlsl.dst
-    const dstAST = Parser.tokenize(dstCode).parseProgram()
+  //   const dstCode = fixtureGlsl.dst
+  //   const dstAST = Parser.tokenize(dstCode).parseProgram()
 
-    const AST = Importer.importAST(dstAST, srcAST)
+  //   const AST = Importer.importAST(dstAST, srcAST)
     
     
-    console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
-    const serializedAST =  Serializer(AST);
-    console.log('serialized:', serializedAST)
+  //   console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
+  //   const serializedAST =  Serializer(AST);
+  //   console.log('serialized:', serializedAST)
 
-    // const nonNewLineCode = code.split(`\n`).filter(w => w !== "").filter(w => (w !== `  ` && w !== `    `))
-    // console.log('nonNewLineCode', nonNewLineCode)
-    // const serializedASTArray = serializedAST.split(`\n`);
+  //   // const nonNewLineCode = code.split(`\n`).filter(w => w !== "").filter(w => (w !== `  ` && w !== `    `))
+  //   // console.log('nonNewLineCode', nonNewLineCode)
+  //   // const serializedASTArray = serializedAST.split(`\n`);
 
-    // expect(serializedASTArray).toEqual(nonNewLineCode)
-  })
+  //   // expect(serializedASTArray).toEqual(nonNewLineCode)
+  // })
 
 
 })

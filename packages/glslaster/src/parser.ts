@@ -40,9 +40,9 @@ class Cursor {
     return this.indexQueue[this.pos]
   }
 
-  forward(){
+  forward(count:number = 1){
     if(!this.eof){
-      this.pos += 1.;
+      this.pos += count;
       return this
     }
     else {
@@ -109,29 +109,43 @@ export default ({
     
     this.cursor = new Cursor(indeces)
 
+    console.log('tokens', this.tokens)
+
     return this
   },
   
-  parseProgram(){
+  parseProgram(id: ProgramId, type: ProgramType){
 
-    const program = new Program()
+    const program = new Program(id, type)
     program.version = this.version
 
     return parseProgram(this.tokens, this.cursor, program)
   },
   parseTokens(){
-    console.log('tokens', this.tokens)
 
     return parseTokens(this.tokens, this.cursor, null)
   }
 
 })
 
+type StructTypesRegistryType = {[key: ProgramId]: StructType[]}
+
+const StructTypesRegistry: StructTypesRegistryType = {
+
+}
+
+type ProgramId = string
+type ProgramType = 'vertex' | 'fragment'
+
 export class Program {
+  id: ProgramId
+  type: ProgramType
   version
   body = []
 
-  constructor(body?){
+  constructor(id: ProgramId, type: ProgramType, body?){
+    this.id = id
+    this.type = type
     if(body){
       this.body = body
     }
@@ -147,11 +161,21 @@ export class Program {
     this.body.splice(start, 0, node)
   }
 
+  addStructNode(struct: StructDeclaration, index?){
+    this.addNode(struct, index)
+    const r = StructTypesRegistry[this.id] || [] 
+    StructTypesRegistry[this.id] = [...r, struct.name]
+  }
+
   clone(){
-    const p = new Program()
+    const p = new Program(this.id, this.type)
     p.version = this.version
     this.body.forEach(d => p.addNode(d))
     return p
+  }
+
+  getStructTypes(): string[]{
+    return this.body.filter(n => n instanceof StructDeclaration).map(n => n.name)
   }
 
 }
@@ -321,6 +345,142 @@ const addToProgram = (tokens, p: Program, pr: ParseResult) => {
   }
 }
 
+export class VariableDeclarator {
+  name: string
+  dataType: string
+  constructor(name, dataType) {
+    this.name = name
+    this.dataType = dataType
+  }
+}
+
+type StructType = string
+export class StructDeclaration  {
+  name: StructType
+  fields: VariableDeclarator[]
+  declarations: VariableDeclarator[]
+
+  constructor(name, fields, declarations?) {
+    this.name = name
+    this.fields = fields
+    if(declarations) {
+      this.declarations = declarations
+    }
+  }
+
+  setDeclarations (declarations: VariableDeclarator[]) {
+    this.declarations = declarations
+  }
+}
+
+const obtainStuctFields = (tokens, cursor, fields: VariableDeclarator[]) => {
+  
+  if(cursor.eof) return fields
+  
+  // get: dataType name;
+  const ct = tokens[cursor.current]
+  const dataType = ct.data
+  
+  const nt = tokens[cursor.next]
+  const name = nt.data
+
+  const d = new VariableDeclarator(name, dataType)
+  fields.push(d)
+  
+  return obtainStuctFields(tokens, cursor.forward(3), fields)
+  
+}
+
+const obtainStructScopeDeclarations = (tokens, cursor, dataType, decls: VariableDeclarator[]) => {
+  if(cursor.eof) return decls
+  
+  const ct = tokens[cursor.current]
+  if(ct.type === 'ident') {
+    decls.push(new VariableDeclarator(ct.data, dataType))
+  }
+  return obtainStructScopeDeclarations(tokens, cursor.forward(), dataType, decls)
+}
+
+const getStructDeclaration = (tokens, cursor): false | [Cursor, StructDeclaration] => {
+  
+  const ct = tokens[cursor.current]
+  if(ct.type !== 'keyword' || ct.data !== 'struct') return false
+
+  const nt = tokens[cursor.next]
+  if(nt.type !== 'ident') return false
+
+  const name = nt.data
+
+  const [bodyCursor, restCursor] = obtainParenthesesScopeCursor(tokens, cursor.forward().forward().forward(), [['{'], ['}']])
+  
+  const fields = obtainStuctFields(tokens, bodyCursor, [])
+
+  const sd = new StructDeclaration(name, fields)
+
+  const _rc = findTokenCursor(tokens, restCursor, { type: 'operator', data: ';' })
+  if(!_rc) return [restCursor, sd]
+  
+  const [declCursor, _restCursor] = _rc.split()
+  const declarations = obtainStructScopeDeclarations(tokens, declCursor, sd.name, [])
+
+  sd.setDeclarations(declarations)
+
+  
+  return [_restCursor.forward(), sd]
+}
+export class StructInitializer extends Array {}
+
+const obtainStuctVariableInitialiser = (tokens, cursor): StructInitializer => {
+
+  const [bodyCursor, _] = obtainParenthesesScopeCursor(tokens, cursor.forward(), [['{'], ['}']])
+  const argGroups = obtainFunctionArguments(tokens, bodyCursor)
+    
+  const si = new StructInitializer()
+  argGroups.forEach(argCursor => {
+      const arg = parseTokens(tokens, argCursor, null)
+      si.push(arg)
+
+    })
+
+  return si
+}
+
+const getStuctVariableDeclaration = (tokens, cursor, programId: ProgramId): false | [Cursor, VariableDeclaration] => {
+
+  const ct = tokens[cursor.current]
+  if(ct.type !== 'ident') return false
+  
+  const structTypes = StructTypesRegistry[programId]
+  const dataType = ct.data
+
+  if(!structTypes.includes(dataType)) return false
+  
+  const vCursor = findTokenCursor(tokens, cursor, { type: 'operator', data: ';' })
+  if(!vCursor) return false
+  
+  const [vdCursor, restCursor] = vCursor.split()
+  vdCursor.moveTo(cursor.current)
+  vdCursor.forward()
+  const vdct = tokens[vdCursor.current]
+  if(vdct.type !== 'ident') {
+    throw new Error('struct type needs a variable name')
+  }
+  const name = vdct.data
+  const vd = new VariableDeclaration(dataType, name)
+
+  const vdnt = tokens[vdCursor.next]
+  if(vdnt && assignmentOperators.includes(vdnt.data)) {
+    
+    const initializer = obtainStuctVariableInitialiser(tokens, vdCursor.forward(2))
+    vd.setInitializer(initializer)
+
+  }
+
+
+
+  return [restCursor.forward(), vd]
+}
+
 const parseProgram = (tokens, cursor, p: Program) => {
 
   if(cursor.eof) return p
@@ -339,6 +499,22 @@ const parseProgram = (tokens, cursor, p: Program) => {
     return parseProgram(tokens, _cursor, p)
   }
 
+  const sd = getStructDeclaration(tokens, cursor)
+  if(sd) {
+    const [_cursor, stmt] = sd
+    p.addStructNode(stmt)
+    return parseProgram(tokens, _cursor, p)
+  }
+
+  const svd = getStuctVariableDeclaration(tokens, cursor, p.id)
+  if(svd) {
+    const [_cursor, stmt] = svd
+    p.addNode(stmt)
+    return parseProgram(tokens, _cursor, p)
+  }
+
+  
+
   
   const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
   if(vld){
@@ -349,6 +525,11 @@ const parseProgram = (tokens, cursor, p: Program) => {
   }
 
   const vd = getVariableDeclaration(tokens, cursor)
+  console.log('vd', vd, tokens[cursor.current], isVariableDeclarationToken(tokens, cursor))
+//   if(isVariableDeclarationToken(tokens, cursor)){
+//     const [_cursor, _stmt] = addVariableDeclaration(tokens, cursor)
+//     return parseTokens(tokens, _cursor, _stmt)
+// }
   if(vd){
     const [_cursor, _stmt] = vd
     p.addNode(_stmt)
@@ -762,9 +943,16 @@ export class VariableDeclaration {
   name
   initializer
 
-  constructor (dataType, identifier, initializer) {
-    this.dataType = dataType.data
-    this.name = identifier.data
+  constructor (dataType, name, initializer?) {
+    this.dataType = dataType
+    this.name = name
+    if(initializer) {
+      this.initializer = initializer
+    }
+    
+  }
+
+  setInitializer(initializer){
     this.initializer = initializer
   }
 }
@@ -941,7 +1129,7 @@ const getMemberExpression = (tokens, cursor): false | [Cursor, MemberExpression]
 
 export class LayoutQualifier {
   parameter
-  constructor (parameter) {
+  constructor (parameter) {
     this.parameter = parameter
   }
 }
