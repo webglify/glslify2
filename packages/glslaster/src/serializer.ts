@@ -19,7 +19,9 @@ import {
   QualifiedVariableDeclaration,
   Parameter,
   PrecisionQualifierDeclaration,
-  LogicalExpression
+  LogicalExpression,
+  DefineDeclaration,
+  ConditionalExpression
 } from '../src/parser'
 
 
@@ -27,9 +29,10 @@ const generateGLSL = (ast) => {
   if (!ast) return '';
 
   switch (ast.constructor) {
-    case Program:
-      console.log('ast', ast)
+    case Program:      
       return `#version ${ast.version}\n${ast.body.map(generateGLSL).join('\n')}`;
+    case DefineDeclaration:
+      return `#define ${ast.ident} ${ast.value}`
     case IfStatement:
     case ElseIfStatement:
       const {test, consequent, alternate} = ast
@@ -40,7 +43,10 @@ const generateGLSL = (ast) => {
     case BlockStatement: 
 
       return `{\n ${ast.map(s => generateGLSL(s))}\n}`
+    case ConditionalExpression:
 
+      return `${generateGLSL(ast.test)} ? ${generateGLSL(ast.consequent)} : ${generateGLSL(ast.alternate)}`
+      
     case LogicalExpression:
       let expr = `${generateGLSL(ast.left)} ${ast.operator} ${generateGLSL(ast.right)}`
       return ast.parentheses ? `(${expr})` : expr

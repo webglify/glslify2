@@ -61,6 +61,7 @@ out float vRowOrder;
 out vec2 vGlyphPadding;
 out float vYPosShift;
 
+#define FONT_SCALE uFontSize/uResolutionInPx
 
 uniform float uAtlasColumnCount;
 uniform vec2 uSDFTextureSize;

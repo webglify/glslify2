@@ -117,10 +117,10 @@ export default ({
     const program = new Program()
     program.version = this.version
 
-    
     return parseProgram(this.tokens, this.cursor, program)
   },
   parseTokens(){
+    console.log('tokens', this.tokens)
 
     return parseTokens(this.tokens, this.cursor, null)
   }
@@ -332,6 +332,13 @@ const parseProgram = (tokens, cursor, p: Program) => {
     return parseProgram(tokens, _cursor, p)
   }
 
+  const dd = getDefineDeclaration(tokens, cursor) 
+  if(dd) {
+    const [_cursor, stmt] = dd
+    p.addNode(stmt)
+    return parseProgram(tokens, _cursor, p)
+  }
+
   
   const vld = getVariableDeclarationWithLayoutToken(tokens, cursor)
   if(vld){
@@ -396,6 +403,34 @@ const getPragmaImportDeclaration = (tokens, cursor): false | [Cursor, ImportDecl
   return [cursor.forward(), new ImportDeclaration(functionNames, src)]
 }
 
+export class DefineDeclaration {
+  ident: string
+  value: string
+  constructor(ident, value){
+    this.ident = ident
+    this.value = value
+  }
+
+}
+
+const getDefineDeclaration = (tokens, cursor): false | [Cursor, DefineDeclaration] => {
+
+  const ct = tokens[cursor.current]
+  
+  if(ct.type !== 'preprocessor') return false
+
+  console.log('preprocessor ct', ct)
+
+  const defineBlock = ct.data.match(/#define\:?\s(.*)\s+(.*)/)
+
+  if(!defineBlock || defineBlock.length != 3) return false
+
+  const [_, ident, value] = defineBlock
+
+  const d= new DefineDeclaration(ident, value)
+  
+  return [cursor.forward(), d]
+}
 export class PrecisionQualifierDeclaration {
   precisionQualifier
   dataType
@@ -804,7 +839,9 @@ const addAssignmentExpression = (tokens, cursor, aggs) => {
 
 }
 
-export class Literal {
+interface  StmtNode {}
+
+export class Literal implements StmtNode {
   value
   type
   constructor(value, type){
@@ -812,7 +849,7 @@ export class Literal {
     this.type = type
   }
 }
-export class Identifier {
+export class Identifier implements StmtNode {
   name
   constructor(name){
     this.name = name
@@ -1252,15 +1289,72 @@ const addLogicalExpression = (tokens, cursor, stmt: any) => {
 } 
 
 
+export class ConditionalExpression implements StmtNode {
+  test: StmtNode
+  consequent: StmtNode
+  alternate: StmtNode
+
+  constructor (test: StmtNode, consequent: StmtNode, alternate: StmtNode) {
+    this.test = test
+    this.consequent = consequent
+    this.alternate = alternate
+  }
+
+}
+
+const findTokenCursor = (tokens, cursor, token) : false | Cursor => {
+    const _c = cursor.clone()
+
+
+    while(!_c.eof) {
+      const ct = tokens[_c.current]
+      if(ct.data === token.data && ct.type === token.type){
+        return _c
+      }
+      _c.forward()
+    }
+
+    return false
+
+}
+
+const getConditionalExpression = (tokens, cursor, stmt) :  false | [Cursor, ConditionalExpression]  => {
+
+  const ct = tokens[cursor.current]
+  if(ct.data !== '?') return false
+  
+  const tokenCursor = findTokenCursor(tokens, cursor, { type: 'operator', data: ':' })
+  if(!tokenCursor) return false
+
+  const [conseq, alter] = tokenCursor.split()
+  
+  conseq.moveTo(cursor.current)
+  
+  const conseqStmt = parseTokens(tokens, conseq, null)
+  const alterStmt = parseTokens(tokens, alter, null)
+
+  const expr = new ConditionalExpression(stmt, conseqStmt, alterStmt)
+  
+
+  return [alter, expr]
+}
+
 const parseTokens = (tokens, cursor, stmt: any) => {
 
     if(cursor.eof) return stmt
 
     const currentToken = tokens[cursor.current]
 
+    
     const ifStatment = getIfStatement(tokens, cursor);
     if(ifStatment) {
       const [_cursor, _stmt] = ifStatment
+      return parseTokens(tokens, _cursor, _stmt)
+    }
+
+    const condExpr = getConditionalExpression(tokens, cursor, stmt);
+    if(condExpr) {
+      const [_cursor, _stmt] = condExpr
       return parseTokens(tokens, _cursor, _stmt)
     }
 

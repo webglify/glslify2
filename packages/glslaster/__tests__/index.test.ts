@@ -9,22 +9,11 @@ import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, As
   IfStatement,
   ElseIfStatement,
   BlockStatement,
-  LogicalExpression
+  LogicalExpression,
+  ConditionalExpression
 } from '../src/parser'
 import util from 'util'
-// const string = `
-  // a + (b + (c + d + f));
-  // `
-  // const string0 = `
-  // a * (b + c);
-  // `
-  // const string2 = `
-  // v + d * (c + a)
-  // `
 
-  // const string3 = `
-  // (a + b) * c * d * n * (f + q * w)
-  // `
 
 const locTestCases = [
   
@@ -233,8 +222,20 @@ if(t >= 0.) {
       new Identifier('s')
       
       )
-  }
-
+  },
+{
+  string: `
+    a = b ? abs(c) : d;
+  `,
+  shouldAST: new AssignmentExpression(
+    '=', 
+    new Identifier('a'), 
+    new ConditionalExpression(
+      new Identifier('b'),
+      new FunctionCall('abs', [new Identifier('c')]),
+      new Identifier('d')
+    ))
+}
 
 
 ]
