@@ -166,6 +166,9 @@ export class Program {
   nt(c: Cursor) {
     return this.tokens[c.next]
   }
+  pt(c: Cursor) {
+    return this.tokens[c.prev]
+  }
  
   removeNode(index) {
     this.body.splice(index, 1)
@@ -314,20 +317,29 @@ export class FunctionDeclaration {
 
 const getFunctionDeclaration = (program, cursor): false | [c: Cursor, any]  => {
 
-  const currentToken = program.tokens[cursor.current]
+  const currentToken = program.ct(cursor)
   if(currentToken.type !== 'ident') return false
-
   const prevToken = program.tokens[cursor.prev]
-  if(prevToken?.type !== 'keyword') return false
+
+  const isStruct = program.getStructTypes().includes(prevToken?.data)
+  
+
+  if(prevToken?.type !== 'keyword' && !isStruct) return false
+
 
   const nextToken = program.tokens[cursor.next]
   if(nextToken?.data !== '(') return false
 
+
   const p = getFuncParameters(program, cursor.clone().forward())
+  
+
   if(!p) return false
   const [pCursor, pStmts] = p
+
   
   const b = getBody(program, pCursor.forward())
+
   if(!b) return false
 
   const [bCursor, bStmts] = b
@@ -454,30 +466,32 @@ const obtainStuctVariableInitialiser = (program, cursor): StructInitializer => {
   return si
 }
 
-const getStuctVariableDeclaration = (program, cursor): false | [Cursor, VariableDeclaration] => {
+const getStuctVariableDeclaration = (program: Program, cursor): false | [Cursor, VariableDeclaration] => {
 
   const ct = program.tokens[cursor.current]
   if(ct.type !== 'ident') return false
+  const name = ct.data
+  
+
+  const pt = program.pt(cursor)
+  if(pt.type !== 'ident') return false
   
   const structTypes = program.getStructTypes()
-  const dataType = ct.data
+  const dataType = pt.data
 
   if(!structTypes.includes(dataType)) return false
   
-  const vCursor = findTokenCursor(program, cursor, { type: 'operator', data: ';' })
-  if(!vCursor) return false
   
-  const [vdCursor, restCursor] = vCursor.split()
-  vdCursor.moveTo(cursor.current)
-  vdCursor.forward()
-  const vdct = program.tokens[vdCursor.current]
-  if(vdct.type !== 'ident') {
-    throw new Error('struct type needs a variable name')
-  }
-  const name = vdct.data
-  const vd = new VariableDeclaration(dataType, name)
+   const vCursor = findTokenCursor(program, cursor, { type: 'operator', data: ';' })
+   if(!vCursor) return false
+  
+   const [vdCursor, restCursor] = vCursor.split()
 
-  const vdnt = program.tokens[vdCursor.next]
+   vdCursor.moveTo(cursor.current)
+
+   const vd = new VariableDeclaration(dataType, name)
+
+  const vdnt = program.nt(vdCursor)
   if(vdnt && assignmentOperators.includes(vdnt.data)) {
     
     const initializer = obtainStuctVariableInitialiser(program, vdCursor.forward(2))
@@ -487,7 +501,7 @@ const getStuctVariableDeclaration = (program, cursor): false | [Cursor, Variable
 
 
 
-  return [restCursor.forward(), vd]
+   return [restCursor.forward(), vd]
 }
 
 const getAssignmentExpression = (program, cursor: Cursor) => {
@@ -498,10 +512,9 @@ const getAssignmentExpression = (program, cursor: Cursor) => {
 
   const vCursor = findPrevTokenCursor(program, leftCursor, { type: 'operator', data: ';' })
   const rCursor = findTokenCursor(program, rightCursor, { type: 'operator', data: ';' })
-  if(!vCursor || !rCursor) return false
+  if(!vCursor || !rCursor) return false
   
   const leftStmt = parseTokens(program, leftCursor, null)
-
   const [arCursor, restCursor] = rCursor.split()
   
   const rightStmt = parseTokens(program, arCursor, null)
@@ -514,6 +527,13 @@ const getAssignmentExpression = (program, cursor: Cursor) => {
 const parseProgram = (program:Program, cursor) => {
 
   if(cursor.eof) return program
+
+  const f = getFunctionDeclaration(program, cursor)
+  if(f) {
+    const [_cursor, stmt] = f
+    program.addNode(stmt)
+    return parseProgram(program, _cursor)
+  }
 
   const pi = getPragmaImportDeclaration(program, cursor)
   if(pi) {
@@ -537,6 +557,7 @@ const parseProgram = (program:Program, cursor) => {
   }
 
   const svd = getStuctVariableDeclaration(program, cursor)
+  
   if(svd) {
     const [_cursor, stmt] = svd
     program.addNode(stmt)
@@ -552,6 +573,9 @@ const parseProgram = (program:Program, cursor) => {
       return parseProgram(program, _cursor)
   }
 
+
+
+
   const vd = getVariableDeclaration(program, cursor)
   if(vd){
     const [_cursor, _stmt] = vd
@@ -559,6 +583,9 @@ const parseProgram = (program:Program, cursor) => {
 
     return parseProgram(program, _cursor)
   }
+
+
+  
   
 
   const ae = getAssignmentExpression(program, cursor);
@@ -573,14 +600,7 @@ const parseProgram = (program:Program, cursor) => {
   if(pd) return addToProgram(program, pd)
 
 
-  const f = getFunctionDeclaration(program, cursor)
-  if(f) {
-    const [_cursor, stmt] = f
-    program.addNode(stmt)
-    return parseProgram(program, _cursor)
-  }
 
-  
 
   return parseProgram(program, cursor.forward())
 }
@@ -993,10 +1013,10 @@ const isVariableDeclarationToken = (program, cursor) => {
   const prevToken = program.tokens[cursor.prev]
   const nextToken = program.tokens[cursor.next]
   
-  
+  const isStruct = program.getStructTypes().includes(prevToken?.data)
   
   return currentToken.type === 'ident' 
-  && prevToken && prevToken.type === 'keyword'
+  && prevToken && (prevToken.type === 'keyword' || isStruct)
   && nextToken && nextToken.data === '='
 }
 
@@ -1005,11 +1025,17 @@ const addVariableDeclaration = (program, cursor) => {
     throw new Error('token is not a variable declaration')
   }
 
-  const dataType = program.tokens[cursor.prev]
-  const identifier = program.tokens[cursor.current]
+  const dataType = program.tokens[cursor.prev].data
+  const identifier = program.tokens[cursor.current].data
 
-  const initializer = parseTokens(program, cursor.forward(), null)
-  const vd = new VariableDeclaration(dataType.data, identifier.data, initializer)
+  const isStruct = program.getStructTypes().includes(dataType);
+  console.log('addVariableDeclaration', dataType, identifier,'isStruct', isStruct)
+
+  const initializer = isStruct
+  ? obtainStuctVariableInitialiser(program, cursor.forward(2))
+  : parseTokens(program, cursor.forward(), null)
+  
+  const vd = new VariableDeclaration(dataType, identifier, initializer)
   return [cursor.toEnd(), vd]
   
 }
@@ -1049,7 +1075,6 @@ const addAssignmentExpression = (program, cursor, aggs) => {
   const ct = program.tokens[cursor.current]
   const left = aggs
   const right = parseTokens(program, cursor.forward(), null)
-
 
   const stmt = ct.data === '='
   ? new AssignmentExpression(ct.data, left, right)

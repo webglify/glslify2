@@ -169,6 +169,12 @@ struct Light {
 Light myLight3;
 Light myLight1 = {vec3(1.), vec3(1.), .1};
 myLight3.position = vec3(1.);
+
+Light getLight(Light l) {
+  Light myLight4 = {vec3(.5), vec3(.5), .5};
+  l.color = myLight4.color;
+  return l;
+}
 `,
 glslConst: `
 const float leftPadding = 0.;

@@ -49,7 +49,7 @@ const generateGLSL = (ast) => {
       return `{${ast.map((s, i) => generateGLSL(s)).join(', ')}}`
     case StructDeclaration:
       
-      const declarations = ast.declarations && ` ${ast.declarations.map(d => d.name).join(', ')}` || ``;
+      const declarations = ast.declarations.length && ` ${ast.declarations.map(d => d.name).join(', ')}` || ``;
       const res = `struct ${ast.name} {\n ${ast.fields.map(v => generateGLSL(v)).join('\n ')}\n}${declarations};`
       
       return res;

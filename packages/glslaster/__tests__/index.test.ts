@@ -357,7 +357,7 @@ describe('Parser and Serializer', () => {
 
   [...locTestCases, ...completeTestCases].forEach((testCase, i) => {
     it(testCase.string.trim(), () => {
-      //runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
+      runSerializeTest((testCase as any).sString || testCase.string, testCase.shouldAST);
     });
   });
 
