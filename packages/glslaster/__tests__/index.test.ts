@@ -1,7 +1,6 @@
 
 import {Parser, Serializer} from "../src";
-import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration, FunctionDeclaration, Program, 
-  MemberExpression,
+import {BinaryExpression, FunctionCall, ConstructorCall, AssignmentExpression, CompoundAssignmentExpression, Literal, Identifier, ReturnStatement, ParameterDeclaration, FunctionDeclaration, Program, 
   LayoutQualifier,
   QualifiedVariableDeclaration,
   Parameter,
@@ -12,7 +11,10 @@ import {BinaryExpression, FunctionCall, ConstructorCall, VariableDeclaration, As
   LogicalExpression,
   ConditionalExpression
 } from '../src/parser'
+import { MemberExpression, UpdateExpression, UpdateExpressions } from "../src/parser/expressions";
+import {VariableDeclarations, VariableDeclaration} from "../src/parser/declarations"
 import util from 'util'
+import { ForStatement } from "../src/parser/statements/for";
 
 
 const locTestCases = [
@@ -80,7 +82,7 @@ const locTestCases = [
     string: `
       vec2 b = c + mix(1, 2, a);
     `,
-    shouldAST: new VariableDeclaration(
+    shouldAST:VariableDeclarations.from([new VariableDeclaration(
       'vec2',
       'b',
       new BinaryExpression({
@@ -95,7 +97,7 @@ const locTestCases = [
           ])
         }
         )
-      )
+      )])
   },
   {
     string: `
@@ -235,7 +237,36 @@ if(t >= 0.) {
         new FunctionCall('abs', [new Identifier('c')]),
         new Identifier('d')
       ))
-  }
+  },
+    {
+      string: `
+for (int i = 0, j = 10; i < j; i++, --j) {
+ k++;
+for (; ; ) {
+ j -= t;
+}
+}`,
+      shouldAST: new ForStatement(
+        VariableDeclarations.from([
+          new VariableDeclaration('int', 'i', new Literal('0', 'integer')),
+          new VariableDeclaration('int', 'j', new Literal('10', 'integer'))
+        ]),
+        new BinaryExpression({operator: '<', left: new Identifier('i'), right: new Identifier('j')}),
+        UpdateExpressions.from([
+          new UpdateExpression('++', new Identifier('i'), false),
+          new UpdateExpression('--', new Identifier('j'), true),
+        ]),
+        BlockStatement.from([
+          UpdateExpressions.from([
+            new UpdateExpression('++', new Identifier('k'), false)
+          ]),
+          new ForStatement(null, null, null, BlockStatement.from([
+            new CompoundAssignmentExpression('-=', new Identifier('j'), new Identifier('t'))
+          ]))
+        
+        ])
+      )
+    },
 
 
 ]
@@ -278,12 +309,8 @@ const prog = new Program('test', 'vertex', [], [
     new ParameterDeclaration("vec2", "b"),
   ],
   [
-  new VariableDeclaration(
-    'vec2',
-    'd',
-    new Identifier('a')
-  ),
-  new ReturnStatement(new Identifier('d'))
+    VariableDeclarations.from([new VariableDeclaration('vec2','d',new Identifier('a'))]),
+    new ReturnStatement(new Identifier('d'))
 ])])
 prog.version = '300 es'
 const completeTestCases = [

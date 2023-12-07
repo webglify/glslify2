@@ -3,7 +3,7 @@ import {
   ProgramAST, 
   FunctionCall, 
   ConstructorCall, 
-  VariableDeclaration, 
+  
   AssignmentExpression, 
   CompoundAssignmentExpression, 
   IfStatement,
@@ -14,7 +14,6 @@ import {
   ReturnStatement, 
   ParameterDeclaration, 
   FunctionDeclaration,
-  MemberExpression,
   LayoutQualifier,
   QualifiedVariableDeclaration,
   Parameter,
@@ -22,11 +21,21 @@ import {
   LogicalExpression,
   DefineDeclaration,
   ConditionalExpression,
-  StructInitializer,
+  
   StructDeclaration,
   VariableDeclarator
-} from '../src/parser'
+} from './parser'
 
+import {
+  StructInitializer,
+  VariableDeclaration,
+  VariableDeclarations
+} from './parser/declarations'
+
+
+
+import {  MemberExpression, UpdateExpressions } from './parser/expressions'
+import { ForStatement } from './parser/statements/for';
 
 const generateGLSL = (ast) => {
   if (!ast) return '';
@@ -43,8 +52,14 @@ const generateGLSL = (ast) => {
       const prefix = alternate && `else ` || ''
       
       return `${start} ${prefix}${generateGLSL(alternate)}`
+    case ForStatement:
+      const for_init = `${generateGLSL(ast.init).replace(';', '')}`
+      const for_test = `${generateGLSL(ast.test)}`
+      const for_update = `${generateGLSL(ast.update)}`.replace(';', '')
+      return `for (${for_init}; ${for_test}; ${for_update}) ${generateGLSL(ast.body)}`
     case BlockStatement:
-      return `{\n ${ast.map(s => generateGLSL(s))}\n}`
+      return `{\n ${ast.map(s => generateGLSL(s)).join('\n')}\n}`
+
     case StructInitializer:
       return `{${ast.map((s, i) => generateGLSL(s)).join(', ')}}`
     case StructDeclaration:
@@ -53,7 +68,6 @@ const generateGLSL = (ast) => {
       const res = `struct ${ast.name} {\n ${ast.fields.map(v => generateGLSL(v)).join('\n ')}\n}${declarations};`
       
       return res;
-
     case VariableDeclarator:
       return `${ast.dataType} ${ast.name};`
     case ConditionalExpression:
@@ -69,9 +83,23 @@ const generateGLSL = (ast) => {
       return `${ast.returnType} ${ast.name}(${params}) {\n  ${body}\n}`;
     case ParameterDeclaration:
       return `${ast.dataType} ${ast.name}`;
+    case VariableDeclarations:
+      return `${ast.map((d,i) => {
+        return i == 0
+        ? `${d.dataType} ${d.name} = ${generateGLSL(d.initializer)}`
+        : `${d.name} = ${generateGLSL(d.initializer)}`
+      }).join(', ')};`
+
     case VariableDeclaration:
       const initializer = ast.initializer ? ` = ${generateGLSL(ast.initializer)}`: '' ;
       return `${ast.dataType} ${ast.name}${initializer};`;
+    case UpdateExpressions:
+      return `${ast.map((d,i) => {
+        return d.prefix 
+        ? `${d.operator}${generateGLSL(d.arg)}`
+        : `${generateGLSL(d.arg)}${d.operator}`
+      }).join(', ')};`
+
     case QualifiedVariableDeclaration:
       const qualifier = ast.qualifier ? `${generateGLSL(ast.qualifier)} ` : ``
       const pQualifier = ast.precisionQualifier? `${ast.precisionQualifier} ` : ``
