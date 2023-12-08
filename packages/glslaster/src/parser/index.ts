@@ -4,6 +4,7 @@ import { getIfStatement, isIfStatement, obtainIfCursorScope } from './statements
 import { getUpdateExpressions, getMemberExpression, MemberExpression } from './expressions'
 import { getSwitchStatement, isSwitchStatement, obtainSwitchCursorScope } from './statements/switch'
 import { getVariableDeclarations, getVariableDefinition } from './declarations'
+import { getWhileStatement, isWhileStatement, obtainWhileCursorScope } from './statements/while'
 
 
 export class Cursor {
@@ -732,8 +733,14 @@ export const parseBody = (program, cursor) => {
       return obtainScope(restCursor, locsCursor, acc)
     }
     if(isSwitchStatement(program, cursor)) {
-      const [forCursor, restCursor] = obtainSwitchCursorScope(program, cursor);
-      acc[locsCursor.length - 1] = forCursor
+      const [swithCursor, restCursor] = obtainSwitchCursorScope(program, cursor);
+      acc[locsCursor.length - 1] = swithCursor
+      locsCursor.push([])
+      return obtainScope(restCursor, locsCursor, acc)
+    }
+    if(isWhileStatement(program, cursor)) {
+      const [whileCursor, restCursor] = obtainWhileCursorScope(program, cursor);
+      acc[locsCursor.length - 1] = whileCursor
       locsCursor.push([])
       return obtainScope(restCursor, locsCursor, acc)
     }
@@ -1490,6 +1497,12 @@ export const parseBodyTokens = (program, cursor, stmt: any) => {
       const [_cursor, _stmt] = switchStmt
       return parseBodyTokens(program, _cursor, _stmt)
     }
+    const whileStmt = getWhileStatement(program, cursor) 
+    if(whileStmt) {
+      const [_cursor, _stmt] = whileStmt
+      return parseBodyTokens(program, _cursor, _stmt)
+    }
+
     const forStatment = getForStatement(program, cursor);
     if(forStatment) {
       const [_cursor, _stmt] = forStatment
@@ -1532,7 +1545,6 @@ export const parseBodyTokens = (program, cursor, stmt: any) => {
   
   if(isAssignmentExpressionToken(program, cursor, stmt)){
     const [_cursor, _stmt] = addAssignmentExpression(program, cursor, stmt)
-    console.log('isAssignmentExpressionToken', _stmt, _cursor)
     return parseBodyTokens(program, _cursor, _stmt)
   }
  

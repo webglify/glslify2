@@ -17,6 +17,7 @@ import { ForStatement } from "../src/parser/statements/for";
 import {IfStatement,
   ElseIfStatement} from '../src/parser/statements/if'
 import { SwitchCases, SwitchStatement, SwitchCase, SwitchConsequent, BreakStatement } from "../src/parser/statements/switch";
+import { WhileStatement } from "../src/parser/statements/while";
 
 
 const locTestCases = [
@@ -273,8 +274,8 @@ for (; ; ) {
       ])
     )
   },
-{
-  string: `
+  {
+    string: `
 switch (a) {
 default:
  a++;
@@ -326,7 +327,30 @@ default:
       
     
   
+  },
+  {
+    string: `
+while (i < 5) {
+ sum += float(i);
+while (j > 5) {
+ j--;
 }
+i++;
+}`,
+    shouldAST: new WhileStatement(
+      new BinaryExpression({operator: '<', left: new Identifier('i'), right: new Literal('5', 'integer')}),
+      BlockStatement.from([
+        new CompoundAssignmentExpression('+=', new Identifier('sum'), new ConstructorCall('float',[new Identifier('i')])),
+        new WhileStatement(
+          new BinaryExpression({operator: '>', left: new Identifier('j'), right: new Literal('5', 'integer')}),
+          BlockStatement.from([
+            UpdateExpressions.from([new UpdateExpression('--', new Identifier('j'), false)])
+          ])
+        ),
+        UpdateExpressions.from([new UpdateExpression('++', new Identifier('i'), false)])
+      ])
+    )
+  }
 
 
 

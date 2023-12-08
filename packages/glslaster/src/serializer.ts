@@ -36,6 +36,7 @@ import {  MemberExpression, UpdateExpressions } from './parser/expressions'
 import { ForStatement } from './parser/statements/for';
 import {  IfStatement,  ElseIfStatement} from './parser/statements/if'
 import { BreakStatement, SwitchStatement } from './parser/statements/switch';
+import { WhileStatement } from './parser/statements/while';
 
 const generateGLSL = (ast) => {
   if (!ast) return '';
@@ -64,6 +65,8 @@ const generateGLSL = (ast) => {
         const cons = c.consequent.map(s => ` ${generateGLSL(s)}`).join('\n')
         return `${p}\n${cons}`
       }).join('\n')}\n}`
+    case WhileStatement:
+      return `while (${generateGLSL(ast.test)}) ${generateGLSL(ast.body)}`
     case BlockStatement:
       return `{\n ${ast.map(s => generateGLSL(s)).join('\n')}\n}`
 
