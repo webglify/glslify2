@@ -14,11 +14,8 @@ export class WhileStatement {
 export const isWhileStatement = (program: Program, cursor: Cursor): boolean => {
   
   const ct = program.ct(cursor)
-  
+    
   if(!ct || ct.data !== 'while' || ct.type !== 'keyword') return false
-  
-  const nt = program.nt(cursor)
-  if(nt.data !== '(' || nt.type !== 'operator') return false
   
   return true
 }
@@ -39,6 +36,7 @@ export const obtainWhileCursorScope =  (program: Program, cursor: Cursor) : [Cur
   
   const [scopeCursor, _] = obtainParenthesesScopeCursor(program, bodyCursor.forward(), [['{'], ['}']])
   
+  console.log('scopeCursor', scopeCursor, _)
   // move cursor to the end of the scope
   c.moveTo(scopeCursor.toEnd().current)
   // move out of scope

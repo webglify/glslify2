@@ -291,6 +291,32 @@ default:
  b++;
 }
 `,
+string1: `
+switch(a){
+  case 1:
+    t++;
+    break;
+  default:    
+    b++;
+    switch(b){
+      default:
+    }
+    while(c){
+      d++;
+    }
+    for(;;){
+      g++;
+    }
+    if(f){
+      k++;
+    }else {
+      d++;
+    }
+    b++;
+    
+}
+`,
+shouldAST1: null,
   shouldAST: new SwitchStatement(
     new Identifier('a'),
     SwitchCases.from([

@@ -709,37 +709,35 @@ const getPrecisionQualifier = (program, cursor): false | [Cursor, PrecisionQuali
 }
 
 
-export const parseBody = (program, cursor) => {
+export const aggregateCursorGroups = (program, cursor, terminateCB: (cursor: Cursor) => boolean) => {
 
   const obtainScope = (cursor2, locsCursor: number[][] = [[]], acc: Cursor[] = []) => {
+   
+    if(terminateCB(cursor2)) return acc
 
-    if(cursor2.eof){      
-      return acc
-    }
-    
     locsCursor[locsCursor.length - 1].push(cursor2.current)
-
+  
     const currentToken = program.tokens[cursor2.current]
-    if(isIfStatement(program, cursor)) {
-      const [ifCursor, restCursor] = obtainIfCursorScope(program, cursor);
+    if(isIfStatement(program, cursor2)) {
+      const [ifCursor, restCursor] = obtainIfCursorScope(program, cursor2);
       acc[locsCursor.length - 1] = ifCursor
       locsCursor.push([])
       return obtainScope(restCursor, locsCursor, acc)
     }
-    if(isForStatement(program, cursor)) {
-      const [forCursor, restCursor] = obtainForCursorScope(program, cursor);
+    if(isForStatement(program, cursor2)) {
+      const [forCursor, restCursor] = obtainForCursorScope(program, cursor2);
       acc[locsCursor.length - 1] = forCursor
       locsCursor.push([])
       return obtainScope(restCursor, locsCursor, acc)
     }
-    if(isSwitchStatement(program, cursor)) {
-      const [swithCursor, restCursor] = obtainSwitchCursorScope(program, cursor);
+    if(isSwitchStatement(program, cursor2)) {
+      const [swithCursor, restCursor] = obtainSwitchCursorScope(program, cursor2);
       acc[locsCursor.length - 1] = swithCursor
       locsCursor.push([])
       return obtainScope(restCursor, locsCursor, acc)
     }
-    if(isWhileStatement(program, cursor)) {
-      const [whileCursor, restCursor] = obtainWhileCursorScope(program, cursor);
+    if(isWhileStatement(program, cursor2)) {
+      const [whileCursor, restCursor] = obtainWhileCursorScope(program, cursor2);
       acc[locsCursor.length - 1] = whileCursor
       locsCursor.push([])
       return obtainScope(restCursor, locsCursor, acc)
@@ -750,24 +748,34 @@ export const parseBody = (program, cursor) => {
       locsCursor.push([])
       return obtainScope(cursor2.forward(), locsCursor, acc)
     }
-
+  
     return obtainScope(cursor2.forward(), locsCursor, acc)
   }
+  
+  return obtainScope(cursor)
+  
+}
 
-  const locsC = obtainScope(cursor)
 
-  const stmts = locsC.map(locCursor => parseBodyTokens(program, locCursor, null))
+export const parseBody = (program, cursor) => {
+
+
+  const cursorGroups = aggregateCursorGroups(program, cursor, (cursor) => cursor.eof)
+
+  const stmts = cursorGroups.map(locCursor => parseBodyTokens(program, locCursor, null))
   
   return BlockStatement.from(stmts)
+  
 }
 
 export const obtainParenthesesScopeCursor = (program, cursor, p = [['('],[')']], debug?) => {
   const obtainScope = (cursor2, depth = 0): [Cursor, Cursor] => {
 
     const currentToken = program.tokens[cursor2.current]
-
+    //console.log('currentToken', currentToken)
     if (currentToken.data == p[1]){
       if(depth === 0) {
+        
         
         const split = cursor2.split(cursor.pos)
         return split

@@ -1,4 +1,7 @@
 import {  findTokenCursor, Cursor, getLiteral, obtainParenthesesScopeCursor, parseBodyTokens, moveToToken } from ".."
+import { isForStatement, obtainForCursorScope } from "./for";
+import { isIfStatement, obtainIfCursorScope } from "./if";
+import { isWhileStatement, obtainWhileCursorScope } from "./while";
 
 export class BreakStatement extends String {
   constructor() {
@@ -71,10 +74,25 @@ export const obtainSwitchCursorScope = (program, cursor): [Cursor, Cursor] => {
 
 const findExprScopeCursor = (program, cursor) => {
 
+
   if(isSwitchStatement(program, cursor)) {
-    const [switchCursor, restCursor] = obtainSwitchCursorScope(program, cursor);
-    return [switchCursor, restCursor] 
+    return obtainSwitchCursorScope(program, cursor);
   }
+  if(isWhileStatement(program, cursor)) {
+
+    const [w1, w2] = obtainWhileCursorScope(program, cursor);    
+    
+    return [w1, w2];
+  }
+    
+  if(isForStatement(program, cursor)) {
+    const [f1, f2] = obtainForCursorScope(program, cursor);
+    
+    return [f1, f2]
+  }
+   if(isIfStatement(program, cursor)) {
+    return obtainIfCursorScope(program, cursor);
+   }
 
   const ec = findTokenCursor(program, cursor, {type: 'operator', data: ';'})
   if(!ec) {
@@ -84,7 +102,7 @@ const findExprScopeCursor = (program, cursor) => {
   const [exprCursor, restCursor] = ec.split()
   
   
-  return [exprCursor, restCursor]
+  return [exprCursor, restCursor.tryForward()]
 }
 
 const obtainConsequent = (program, cursor, consequent: any[] = new SwitchConsequent() ): [Cursor, SwitchConsequent] => {
@@ -106,7 +124,7 @@ const obtainConsequent = (program, cursor, consequent: any[] = new SwitchConsequ
   const expr = parseBodyTokens(program, exprCursor, null)
   consequent.push(expr)
 
-  return obtainConsequent(program, restCursor.tryForward(), consequent)
+  return obtainConsequent(program, restCursor, consequent)
 }
 
 const aggregateSwitchCases = (program, cursor, cases: SwitchCases = SwitchCases.from<SwitchCase>([]) ) : SwitchCases => {
@@ -114,9 +132,13 @@ const aggregateSwitchCases = (program, cursor, cases: SwitchCases = SwitchCases.
   let test = null
   if(ct.data == 'case'){
     test = getLiteral(program, cursor.forward())[1]
+  }else if(ct.data == 'default') {
+    cursor.forward()
   }
   // go over ':'
-  cursor.forward(2)
+  cursor.forward()
+
+  console.log('cursor b', cursor, program.tokens[7])
 
   const [caseCursor, consequent] = obtainConsequent(program, cursor);
   const _case = new SwitchCase(test, consequent);
@@ -137,9 +159,7 @@ export const getSwitchStatement = (program, cursor): false | [Cursor, SwitchStat
 
   const [argCursor, _bodyCursor] = obtainParenthesesScopeCursor(program, cursor.forward(2))
   const discriminant = parseBodyTokens(program, argCursor, null)
-  
-  
-  
+
   const [scopeCursor, restCursor] = obtainParenthesesScopeCursor(program, _bodyCursor.forward(2), [['{'], ['}']])
   
   const cases = aggregateSwitchCases(program, scopeCursor)
