@@ -5,8 +5,7 @@ import {BinaryExpression, FunctionCall, ConstructorCall, AssignmentExpression, C
   QualifiedVariableDeclaration,
   Parameter,
   PrecisionQualifierDeclaration,
-  IfStatement,
-  ElseIfStatement,
+  
   BlockStatement,
   LogicalExpression,
   ConditionalExpression
@@ -15,6 +14,8 @@ import { MemberExpression, UpdateExpression, UpdateExpressions } from "../src/pa
 import {VariableDeclarations, VariableDeclaration} from "../src/parser/declarations"
 import util from 'util'
 import { ForStatement } from "../src/parser/statements/for";
+import {IfStatement,
+  ElseIfStatement} from '../src/parser/statements/if'
 
 
 const locTestCases = [
@@ -192,22 +193,26 @@ const locTestCases = [
   },
   {
     string: `
-if(t >= 0.) {
+if(a >= 0.) {
+ if(t >= 0.) {
  b = 1.;
 } else if(t == 1.) {
  b = 2.;
 } else {
  c = 1.;
 }
-    `,
+}`,
     shouldAST: new IfStatement(
-      new BinaryExpression({operator: '>=', left: new Identifier('t'), right: new Literal('0.', 'float')}),
-      BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('1.', 'float'))]),
-      new ElseIfStatement(
-        new BinaryExpression({operator: '==', left: new Identifier('t'), right: new Literal('1.', 'float')}),
-        BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('2.', 'float'))]),
-        BlockStatement.from([new AssignmentExpression('=', new Identifier('c'), new Literal('1.', 'float'))])
-      )
+      new BinaryExpression({operator: '>=', left: new Identifier('a'), right: new Literal('0.', 'float')}),
+      BlockStatement.from([new IfStatement(
+        new BinaryExpression({operator: '>=', left: new Identifier('t'), right: new Literal('0.', 'float')}),
+        BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('1.', 'float'))]),
+        new ElseIfStatement(
+          new BinaryExpression({operator: '==', left: new Identifier('t'), right: new Literal('1.', 'float')}),
+          BlockStatement.from([new AssignmentExpression('=', new Identifier('b'), new Literal('2.', 'float'))]),
+          BlockStatement.from([new AssignmentExpression('=', new Identifier('c'), new Literal('1.', 'float'))])
+        )
+      )])
     )
 
   },
@@ -238,35 +243,36 @@ if(t >= 0.) {
         new Identifier('d')
       ))
   },
-    {
-      string: `
+  {
+    string: `
 for (int i = 0, j = 10; i < j; i++, --j) {
  k++;
 for (; ; ) {
  j -= t;
 }
 }`,
-      shouldAST: new ForStatement(
-        VariableDeclarations.from([
-          new VariableDeclaration('int', 'i', new Literal('0', 'integer')),
-          new VariableDeclaration('int', 'j', new Literal('10', 'integer'))
-        ]),
-        new BinaryExpression({operator: '<', left: new Identifier('i'), right: new Identifier('j')}),
+    shouldAST: new ForStatement(
+      VariableDeclarations.from([
+        new VariableDeclaration('int', 'i', new Literal('0', 'integer')),
+        new VariableDeclaration('int', 'j', new Literal('10', 'integer'))
+      ]),
+      new BinaryExpression({operator: '<', left: new Identifier('i'), right: new Identifier('j')}),
+      UpdateExpressions.from([
+        new UpdateExpression('++', new Identifier('i'), false),
+        new UpdateExpression('--', new Identifier('j'), true),
+      ]),
+      BlockStatement.from([
         UpdateExpressions.from([
-          new UpdateExpression('++', new Identifier('i'), false),
-          new UpdateExpression('--', new Identifier('j'), true),
+          new UpdateExpression('++', new Identifier('k'), false)
         ]),
-        BlockStatement.from([
-          UpdateExpressions.from([
-            new UpdateExpression('++', new Identifier('k'), false)
-          ]),
-          new ForStatement(null, null, null, BlockStatement.from([
-            new CompoundAssignmentExpression('-=', new Identifier('j'), new Identifier('t'))
-          ]))
-        
-        ])
-      )
-    },
+        new ForStatement(null, null, null, BlockStatement.from([
+          new CompoundAssignmentExpression('-=', new Identifier('j'), new Identifier('t'))
+        ]))
+      
+      ])
+    )
+  },
+
 
 
 ]

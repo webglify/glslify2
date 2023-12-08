@@ -1,5 +1,6 @@
 import tokenize from 'glsl-tokenizer/string'
 import { getForStatement, isForStatement, obtainForCursorScope } from './statements/for'
+import { getIfStatement, isIfStatement, obtainIfCursorScope } from './statements/if'
 import { getUpdateExpressions, getMemberExpression, MemberExpression } from './expressions'
 import { getVariableDeclarations, getVariableDefinition } from './declarations'
 
@@ -54,6 +55,14 @@ export class Cursor {
     }
   }
 
+  tryForward(count:number = 1){
+    try {
+      this.forward(count)
+    } catch {
+      return this
+    }
+  }
+  
   moveTo(index) {
     this.pos = this.indexQueue.findIndex((i) => i === index)
   }
@@ -87,6 +96,10 @@ export class Cursor {
       new Cursor(this.indexQueue.slice(from, this.pos )), 
       new Cursor(this.indexQueue.slice(this.pos ))
     ]
+  }
+  append(cursor: Cursor): Cursor {
+    const indexQueue = [...this.indexQueue, ...cursor.indexQueue]
+    return new Cursor(indexQueue)
   }
 
   clone(){
@@ -705,6 +718,12 @@ export const parseBody = (program, cursor) => {
     locsCursor[locsCursor.length - 1].push(cursor2.current)
 
     const currentToken = program.tokens[cursor2.current]
+    if(isIfStatement(program, cursor)) {
+      const [ifCursor, restCursor] = obtainIfCursorScope(program, cursor);
+      acc[locsCursor.length - 1] = ifCursor
+      locsCursor.push([])
+      return obtainScope(restCursor, locsCursor, acc)
+    }
     if(isForStatement(program, cursor)) {
       const [forCursor, restCursor] = obtainForCursorScope(program, cursor);
       acc[locsCursor.length - 1] = forCursor
@@ -1280,97 +1299,6 @@ const getVariableDeclaration = (program, cursor, qualifier?) : false | [Cursor, 
 export class BlockStatement extends Array {
   
 }
-
-export class IfStatement  {
-
-  test: BinaryExpression
-  consequent: BlockStatement
-  alternate: Alternate
-
-  constructor(test, consequent, alternate?) {
-    this.test = test
-    this.consequent = consequent    
-    if(alternate){
-      this.alternate = alternate
-    }
-  }
-
-  setAlternate(alternate: Alternate) {
-    this.alternate = alternate
-  }
-}
-
-export class ElseIfStatement extends IfStatement {}
-
-type Alternate = IfStatement | BlockStatement | ElseIfStatement
-
-const getIfStatement = (program, cursor, elseif: boolean = false): false | [Cursor, IfStatement] =>  {
-
-  const ct = program.tokens[cursor.current]
-  
-  if(!ct || ct.type !== 'keyword' || ct.data !== 'if') return false
-  
-  
-  const nt = program.tokens[cursor.next]
-  if(nt.data != '(') return false
-
-  const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
-
-  
-  const test = parseTokens(program, c1, null)
-
-  const bt = program.tokens[c2.next]
-  if(bt.type !== 'operator' && bt.data !== '{') {
-    throw new Error('syntax error, if statments need a block {')
-  }
-
-  const [b1, b2] = obtainParenthesesScopeCursor(program, c2.forward().forward(), [['{'], ['}']])
-  const consequent = parseBody(program, b1)
-  
-
-  const STMT = elseif 
-  ? new ElseIfStatement(test, consequent)
-  : new IfStatement(test, consequent)
-
-  const nit = program.tokens[b2.next]
-  
-  if(nit && nit.type == 'keyword' && nit.data == 'else') {
-
-    b2.forward()
-    const nt = program.tokens[b2.next]
-    
-
-    if(nt.type === 'keyword' && nt.data === 'if') {
-      // follow up 'else if' statement
-      const res = getIfStatement(program, b2.forward(), true)
-      if(res) {
-      
-        const [cursor2, alternate] = res
-        STMT.setAlternate(alternate)
-        return [cursor2.forward(), STMT]
-     
-      }
-    }
-    else {
-      // close else
-      if(nt.type !== 'operator' && nt.data !== '{') {
-        throw new Error('syntax error, if statments need a block {')
-      }
-      const [a1, a2] = obtainParenthesesScopeCursor(program, b2.forward().forward(), [['{'], ['}']])
-
-
-      const alternate = parseBody(program, a1)
-      STMT.setAlternate(alternate)
-
-      return [a2.forward(), STMT]
-    }
-
-    
-  }
-  
-  return [b2.forward(), STMT]
-
-} 
 
 export class LogicalExpression {
   operator

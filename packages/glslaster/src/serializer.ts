@@ -6,8 +6,6 @@ import {
   
   AssignmentExpression, 
   CompoundAssignmentExpression, 
-  IfStatement,
-  ElseIfStatement,
   BlockStatement,
   Literal, 
   Identifier, 
@@ -36,6 +34,7 @@ import {
 
 import {  MemberExpression, UpdateExpressions } from './parser/expressions'
 import { ForStatement } from './parser/statements/for';
+import {  IfStatement,  ElseIfStatement} from './parser/statements/if'
 
 const generateGLSL = (ast) => {
   if (!ast) return '';
@@ -49,9 +48,9 @@ const generateGLSL = (ast) => {
     case ElseIfStatement:
       const {test, consequent, alternate} = ast
       const start = `if(${generateGLSL(test)}) ${generateGLSL(consequent)}`
-      const prefix = alternate && `else ` || ''
+      const prefix = alternate && ` else ` || ''
       
-      return `${start} ${prefix}${generateGLSL(alternate)}`
+      return `${start}${prefix}${generateGLSL(alternate)}`
     case ForStatement:
       const for_init = `${generateGLSL(ast.init).replace(';', '')}`
       const for_test = `${generateGLSL(ast.test)}`
