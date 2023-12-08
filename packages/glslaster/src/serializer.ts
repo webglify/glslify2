@@ -35,6 +35,7 @@ import {
 import {  MemberExpression, UpdateExpressions } from './parser/expressions'
 import { ForStatement } from './parser/statements/for';
 import {  IfStatement,  ElseIfStatement} from './parser/statements/if'
+import { BreakStatement, SwitchStatement } from './parser/statements/switch';
 
 const generateGLSL = (ast) => {
   if (!ast) return '';
@@ -56,6 +57,13 @@ const generateGLSL = (ast) => {
       const for_test = `${generateGLSL(ast.test)}`
       const for_update = `${generateGLSL(ast.update)}`.replace(';', '')
       return `for (${for_init}; ${for_test}; ${for_update}) ${generateGLSL(ast.body)}`
+    case SwitchStatement:
+
+      return `switch (${generateGLSL(ast.discriminant)}) {\n${ast.cases.map(c => {
+        const p = c.test ? `case ${generateGLSL(c.test)}:`:`default:`
+        const cons = c.consequent.map(s => ` ${generateGLSL(s)}`).join('\n')
+        return `${p}\n${cons}`
+      }).join('\n')}\n}`
     case BlockStatement:
       return `{\n ${ast.map(s => generateGLSL(s)).join('\n')}\n}`
 
@@ -131,6 +139,8 @@ const generateGLSL = (ast) => {
       return ast.name;
     case Literal:
         return `${ast.value}`;
+    case BreakStatement:
+        return `${ast}`
     case ReturnStatement:
       const argument = generateGLSL(ast.argument);
       return `return ${argument};`;

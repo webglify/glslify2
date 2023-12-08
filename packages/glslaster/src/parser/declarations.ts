@@ -1,4 +1,4 @@
-import {Cursor, obtainCommaSeparatedArguments, obtainParenthesesScopeCursor, parseTokens} from './'
+import {Cursor, obtainCommaSeparatedArguments, obtainParenthesesScopeCursor, parseBodyTokens} from './'
 
 
 
@@ -74,7 +74,7 @@ export const getVariableDeclarations = (program, cursor): false | [Cursor, Varia
     const vds = ofa.map((c, i) => {
       const name = i == 0 ? identifier : program.ct(c).data
       const _c = i == 0 ?  c : c.forward(2)
-      const initializer = parseTokens(program, _c, null)
+      const initializer = parseBodyTokens(program, _c, null)
       const vd = new VariableDeclaration(dataType, name, initializer)
       return vd
     })
@@ -108,7 +108,7 @@ const obtainStuctVariableInitialiser = (program, cursor): [Cursor, StructInitial
     
   const si = new StructInitializer()
   argGroups.forEach(argCursor => {
-      const arg = parseTokens(program, argCursor, null)
+      const arg = parseBodyTokens(program, argCursor, null)
       si.push(arg)
 
     })

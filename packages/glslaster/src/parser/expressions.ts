@@ -1,4 +1,4 @@
-import { Cursor, Identifier, Literal, obtainParenthesesScopeCursor, Program, parseTokens, getIdentifier } from "."
+import { Cursor, Identifier, Literal, obtainParenthesesScopeCursor, Program, parseBodyTokens, getIdentifier } from "."
 
 export class MemberExpression {
   object: Identifier
@@ -34,7 +34,7 @@ export const getMemberExpression = (program, cursor): false | [Cursor, MemberExp
   
   // computed true
   const [pc1, pc2] = obtainParenthesesScopeCursor(program, c2, [['['], [']']])
-  const property = parseTokens(program, pc1, null)
+  const property = parseBodyTokens(program, pc1, null)
   return [
     pc2.forward(), 
     new MemberExpression(

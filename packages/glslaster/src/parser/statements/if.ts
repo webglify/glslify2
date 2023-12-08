@@ -2,7 +2,7 @@ import {
   obtainParenthesesScopeCursor,
   BinaryExpression,
   BlockStatement,
-  parseTokens,
+  parseBodyTokens,
   parseBody,
   moveToToken,
   Cursor
@@ -94,7 +94,7 @@ export const getIfStatement = (program, cursor, elseif: boolean = false): false 
   if(!isIfStatement(program, cursor)) return false
 
   const [c1, c2] = obtainParenthesesScopeCursor(program, cursor.forward().forward())
-  const test = parseTokens(program, c1, null)
+  const test = parseBodyTokens(program, c1, null)
 
   const bt = program.tokens[c2.next]
   if(bt.type !== 'operator' && bt.data !== '{') {
@@ -123,7 +123,6 @@ export const getIfStatement = (program, cursor, elseif: boolean = false): false 
       if(res) {
       
         const [cursor2, alternate] = res
-        console.log('cursor2, alternate', cursor2, alternate)
         STMT.setAlternate(alternate)
         return [cursor2.tryForward(), STMT]
      

@@ -1,4 +1,4 @@
-import { Program, BlockStatement, Cursor, obtainParenthesesScopeCursor, parseTokens, parseBody, moveToToken } from "..";
+import { Program, BlockStatement, Cursor, obtainParenthesesScopeCursor, parseBodyTokens, parseBody, moveToToken } from "..";
 
 export class ForStatement {
   init
@@ -95,10 +95,10 @@ export const getForStatement = (program: Program, cursor: Cursor) : false | [Cur
   }
   const [initC, testC, updateC] = argsC
 
-  const init = parseTokens(program, initC, null)
+  const init = parseBodyTokens(program, initC, null)
 
-  const test = parseTokens(program, testC, null)
-  const update = parseTokens(program, updateC, null)
+  const test = parseBodyTokens(program, testC, null)
+  const update = parseBodyTokens(program, updateC, null)
 
   // go inside body
   const [bodyCursor, restCursor] = obtainParenthesesScopeCursor(program, _bodyCursor.forward(2), [['{'], ['}']])

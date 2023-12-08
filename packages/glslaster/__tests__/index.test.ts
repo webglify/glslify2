@@ -16,6 +16,7 @@ import util from 'util'
 import { ForStatement } from "../src/parser/statements/for";
 import {IfStatement,
   ElseIfStatement} from '../src/parser/statements/if'
+import { SwitchCases, SwitchStatement, SwitchCase, SwitchConsequent, BreakStatement } from "../src/parser/statements/switch";
 
 
 const locTestCases = [
@@ -272,6 +273,60 @@ for (; ; ) {
       ])
     )
   },
+{
+  string: `
+switch (a) {
+default:
+ a++;
+ switch (value) {
+case 0:
+ t = d + a;
+case 1:
+ b++;
+ break;
+default:
+ b = 1;
+}
+ b++;
+}
+`,
+  shouldAST: new SwitchStatement(
+    new Identifier('a'),
+    SwitchCases.from([
+      new SwitchCase(null, SwitchConsequent.from([
+        UpdateExpressions.from([new UpdateExpression('++', new Identifier('a'), false)]),
+        new SwitchStatement(
+          new Identifier('value'),
+          SwitchCases.from([
+            new SwitchCase(
+              new Literal('0', 'integer'),
+              SwitchConsequent.from([
+                new AssignmentExpression('=', new Identifier('t'), new BinaryExpression({operator: '+', left: new Identifier('d'), right: new Identifier('a')}))
+              ])
+            ),
+            new SwitchCase(
+              new Literal('1', 'integer'),
+              SwitchConsequent.from([
+                UpdateExpressions.from([new UpdateExpression('++', new Identifier('b'), false)]),
+                new BreakStatement()
+              ])
+            ),
+            new SwitchCase(
+              null,
+              SwitchConsequent.from([
+                new AssignmentExpression('=', new Identifier('b'), new Literal('1', 'integer'))
+              ])
+            )
+          ])
+        ),
+        UpdateExpressions.from([new UpdateExpression('++', new Identifier('b'), false)]),       
+      ]))
+    ])
+  )
+      
+    
+  
+}
 
 
 
@@ -355,7 +410,7 @@ describe('Parser and Serializer', () => {
 
   const runLocTest = (string, shouldAST) => {
     
-    const AST = Parser.tokenize(string).parseTokens();
+    const AST = Parser.tokenize(string).parseBodyTokens();
     console.log('AST', util.inspect(AST, {showHidden: false, depth: null, colors: false}))
 
     
